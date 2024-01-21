@@ -48,14 +48,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Builder Docker Image
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
     - name: Build Docker Image
       run: |
         cd newsbotmysql
-        docker build -t newsbot:${GITHUB_SHA} .
-    # - name: Build package
-    #   run: python -m build
-    # - name: Publish package
-    #   uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-    #   with:
-    #     user: __token__
-    #     password: ${{ secrets.PYPI_API_TOKEN }}
+        docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        docker build -t ${DOCKER_USERNAME}/newsbot:${GITHUB_SHA} .
+        docker push ${DOCKER_USERNAME}/newsbot:${GITHUB_SHA}
