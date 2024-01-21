@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  newsbot:
+    build: .
+    depends_on:
+      - mysql
+    environment:
+      - NBT_ACCESS_TOKEN=${NBT_ACCESS_TOKEN}
+    networks:
+      - newsbot
+
+  mysql:
+    image: mysql
+    ports:
+      - "3306"
+    volumes:
+      - newsbot-db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=toor
+    networks:
+      - newsbot
+
+volumes:
+  newsbot-db:
+
+networks:
+  newsbot:
