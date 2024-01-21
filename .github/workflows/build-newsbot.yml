@@ -35,9 +35,9 @@ jobs:
         pip install flake8
         cd newsbotmysql
         # run flake8 first to detect any python syntax errors
-        python -m flak8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # run again to exit treating all errors as warnings
-        python -m flake8 . --count --exit-zero --max-complexity=10 --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --statistics
     # - name: Build package
     #   run: python -m build
     # - name: Publish package
