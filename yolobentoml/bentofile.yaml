@@ -1,0 +1,14 @@
+service: "service.py:svc"
+include:
+  - "service.py"
+  - "yolo_model/best.pt"
+python:
+  packages:
+  - "bentoml==1.1.11"
+  - "torch"
+  - "ultralyticsplus==0.0.29"
+docker:
+  system_packages:
+    - ffmpeg
+    - libsm6
+    - libxext6
