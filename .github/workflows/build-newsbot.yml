@@ -30,6 +30,14 @@ jobs:
         pwd
         cd newsbotmysql
         pip install -r requirements.txt
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        cd newsbotmysql
+        # run flake8 first to detect any python syntax errors
+        flak8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # run again to exit treating all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --statistics
     # - name: Build package
     #   run: python -m build
     # - name: Publish package
