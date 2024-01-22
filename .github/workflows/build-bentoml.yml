@@ -60,6 +60,6 @@ jobs:
         cd yolobentoml
         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
         bentoml build --containerize
-        echo "CONTAINER_NAME=$(bentoml list 2>&1 | grep yolo_v8 | awk '{print $1}')" >> $GITHUB_ENV
-        echo ${{ env.CONTAINER_NAME}}
-        docker push ${DOCKER_USERNAME}/${{ env.CONTAINER_NAME}}
+        CONTAINER_NAME=$(bentoml list 2>&1 | grep yolo_v8 | awk '{print $1}')
+        echo $CONTAINER_NAME
+        docker push ${DOCKER_USERNAME}/$CONTAINER_NAME
