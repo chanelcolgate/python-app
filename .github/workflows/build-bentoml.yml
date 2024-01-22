@@ -52,6 +52,7 @@ jobs:
         pip install -r requirements.txt
 
     - name: Builder a Bento
+      id: builder-a-bento
       run: |
         cd yolobentoml
         bentoml build --containerize
