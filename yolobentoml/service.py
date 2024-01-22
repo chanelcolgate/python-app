@@ -66,7 +66,7 @@ class Yolov8Runnable(bentoml.Runnable):
 
 yolo_v8_runner = bentoml.Runner(Yolov8Runnable, max_batch_size=30)
 
-svc = bentoml.Service("yolo_v8_demo", runners=[yolo_v8_runner])
+svc = bentoml.Service("chanelcolgate/yolo_v8_demo", runners=[yolo_v8_runner])
 
 
 @svc.api(input=Image(), output=JSON())
