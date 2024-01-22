@@ -71,7 +71,7 @@ svc = bentoml.Service("yolo_v8_demo", runners=[yolo_v8_runner])
 
 @svc.api(input=Image(), output=JSON())
 async def invocation(input_img):
-    batch_ret = await yolo_v8_runner.inference_size.async_run(input_img)
+    batch_ret = await yolo_v8_runner.inference.async_run(input_img)
     return batch_ret
 
 
