@@ -56,4 +56,4 @@ jobs:
         cd yolodetection
         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
         docker build -t ${DOCKER_USERNAME}/labelstudioml:${GITHUB_SHA} .
-        docker push ${DOCKER_USERNAME}/newsbot:${GITHUB_SHA}
+        docker push ${DOCKER_USERNAME}/labelstudioml:${GITHUB_SHA}
