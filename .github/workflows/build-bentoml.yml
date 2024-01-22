@@ -53,16 +53,12 @@ jobs:
 
     - name: Builder a Bento
       id: builder-a-bento
-      run: |
-        cd yolobentoml
-        bentoml build --containerize
-        echo "container_name=$(bentoml list 2>&1 | grep yolo_v8 | awk '{print $1}')" >> $GITHUB_OUTPUT
-        
-    - name: Builder Docker Image
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
-        cd newsbotmysql
+        cd yolobentoml
         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        bentoml build --containerize
+        echo "container_name=$(bentoml list 2>&1 | grep yolo_v8 | awk '{print $1}')" >> $GITHUB_OUTPUT
         docker push ${DOCKER_USERNAME}/${{ steps.builder-a-bento.outputs.container_name }}
