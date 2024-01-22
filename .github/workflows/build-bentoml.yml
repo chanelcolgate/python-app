@@ -55,7 +55,7 @@ jobs:
       run: |
         cd yolobentoml
         bentoml build --containerize
-        echo $(bentoml list 2>&1 | awk '{print $2}')
+        echo $(bentoml list 2>&1 |find yolo_v8 | awk '{print $1}')
 
     # - name: Builder Docker Image
     #   env:
