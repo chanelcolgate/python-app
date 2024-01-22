@@ -54,7 +54,7 @@ class Yolov8(LabelStudioMLBase):
                         "rectanglelabels": [r["name"]],
                         "x": xmin / img_width * 100,
                         "y": ymin / img_height * 100,
-                        "width": (xman - xmin) / img_width * 100,
+                        "width": (xmax - xmin) / img_width * 100,
                         "height": (ymax - ymin) / img_height * 100,
                     },
                     "score": score,
