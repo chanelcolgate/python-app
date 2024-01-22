@@ -51,7 +51,7 @@ jobs:
         cd yolobentoml
         pip install -r requirements.txt
 
-    - name: Builder a Bento
+    - name: Builderand push a Bento
       id: builder-a-bento
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -62,4 +62,4 @@ jobs:
         bentoml build --containerize
         CONTAINER_NAME=$(bentoml list 2>&1 | grep yolo_v8 | awk '{print $1}')
         echo $CONTAINER_NAME
-        docker push ${DOCKER_USERNAME}/$CONTAINER_NAME
+        docker push $CONTAINER_NAME
