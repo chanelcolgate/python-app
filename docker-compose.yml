@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+  label_studio:
+    image: heartexlabs/label-studio:latest
+    ports:
+      - 8508:8080
+    volumes:
+      - ./data:/label-studio/data
+    networks:
+      - label_studio_network
+
+  bentoml:
+    image: chanelcolgate/yolo_v8_demo:ux7qdefy7smwfq42 
+    hostname: bentoml
+    ports:
+      - "3000:3000"
+    networks:
+      - label_studio_network
+
+  redis:
+    image: redis:alpine
+    hostname: redis
+    volumes:
+      - "./data/redis:/data"
+    expose:
+      - 6379
+    networks:
+      - label_studio_network
+
+  server:
+    image: chanelcolgate/labelstudioml:3cac81738ebae8afeb2616e1f3a3d9a1e767cbf5
+    environment:
+      - RQ_QUEUE_NAME=default
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "9092:9090"
+    depends_on:
+      - redis
+    volumes:
+      - "./logs:/tmp"
+      - "./data/media:/data"
+    networks:
+      - label_studio_network
+
+networks:
+  label_studio_network:

@@ -1,2 +1,5 @@
 .venv
 __pycache__
+data
+newsbotpostgres
+yolov8n.pt
