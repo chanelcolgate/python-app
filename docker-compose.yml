@@ -10,7 +10,7 @@ services:
       - label_studio_network
 
   bentoml:
-    image: chanelcolgate/yolo_v8_demo:ux7qdefy7smwfq42 
+    image: chanelcolgate/yolo_v8_demo:sgqolwf5bsgptsky
     hostname: bentoml
     ports:
       - "3000:3000"

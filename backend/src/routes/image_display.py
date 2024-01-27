@@ -23,28 +23,27 @@ exchange.declare()
 
 @image_display_router.post("/object-detection")
 async def create_object_detection(body: ImageDisplayCreate = Body(...)) -> dict:
-    if settings.DEBUG:
-        print(body.dict(exclude_unset=True))
-
     queue_name = f"response-queue-{os.getpid()}"
     response_queue = rabbitpy.Queue(
         channel, queue_name, auto_delete=True, durable=False, exclusive=True
     )
 
-    # Declare the response queue
-    if response_queue.declare():
-        print("Response queue declared")
+    if settings.DEBUG:
+        # Declare the response queue
+        if response_queue.declare():
+            print("Response queue declared")
 
-    # Bind the response queue
-    if response_queue.bind("rpc-replies", queue_name):
-        print("Response queue bound")
+        # Bind the response queue
+        if response_queue.bind("rpc-replies", queue_name):
+            print("Response queue bound")
 
     image_url = body.dict(exclude_unset=True)["image"]
     if not image_url[:8].startswith(("https://", "http://")):
         image_url = "http://" + image_url
 
     # start job
-    print(f"Sending request for image: {image_url}")
+    if settings.DEBUG:
+        print(f"Sending request for image: {image_url}")
     temp_file = utils.read_and_write_url(image_url)
     message = rabbitpy.Message(
         channel,
@@ -68,14 +67,17 @@ async def create_object_detection(body: ImageDisplayCreate = Body(...)) -> dict:
     # Ack the response message
     message.ack()
 
-    # Calculate how long it took from publish to response
-    duration = time.time() - time.mktime(message.properties["headers"]["first_publish"])
-    print(f"Facial detection RPC call for image total duration: {duration}")
+    if settings.DEBUG:
+        # Calculate how long it took from publish to response
+        duration = time.time() - time.mktime(
+            message.properties["headers"]["first_publish"]
+        )
+        print(f"Facial detection RPC call for image total duration: {duration}")
 
-    # Display the result
-    print(message.body, message.properties["content_type"])
-    print("RPC requests processed")
-    # channel.close()
-    # connection.close()
+        # Display the result
+        print(message.body, message.properties["content_type"])
+        print("RPC requests processed")
+        # channel.close()
+        # connection.close()
 
     return {"message": "Image Display created successfully"}
