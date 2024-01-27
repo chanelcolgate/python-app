@@ -14,17 +14,17 @@ settings = Settings()
 
 image_display_router = APIRouter(tags=["Image Display"])
 
+connection = rabbitpy.Connection()
+channel = connection.channel()
+
+exchange = rabbitpy.DirectExchange(channel, "rpc-replies")
+exchange.declare()
+
 
 @image_display_router.post("/object-detection")
 async def create_object_detection(body: ImageDisplayCreate = Body(...)) -> dict:
     if settings.DEBUG:
         print(body.dict(exclude_unset=True))
-
-    connection = rabbitpy.Connection()
-    channel = connection.channel()
-
-    exchange = rabbitpy.DirectExchange(channel, "rpc-replies")
-    exchange.declare()
 
     queue_name = f"response-queue-{os.getpid()}"
     response_queue = rabbitpy.Queue(
@@ -75,7 +75,7 @@ async def create_object_detection(body: ImageDisplayCreate = Body(...)) -> dict:
     # Display the result
     print(message.body, message.properties["content_type"])
     print("RPC requests processed")
-    channel.close()
-    connection.close()
+    # channel.close()
+    # connection.close()
 
     return {"message": "Image Display created successfully"}

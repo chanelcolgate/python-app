@@ -4,3 +4,4 @@ __pycache__
 data
 newsbotpostgres
 yolov8n.pt
+*.jpg

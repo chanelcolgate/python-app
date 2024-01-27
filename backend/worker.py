@@ -10,11 +10,16 @@ import requests
 # Open the connection and the channel
 connection = rabbitpy.Connection()
 channel = connection.channel()
+channel.prefetch_count(10)
 
 # Create the worker queue
 queue_name = f"rpc-worker-{os.getpid()}"
 queue = rabbitpy.Queue(
-    channel, queue_name, auto_delete=True, durable=False, exclusive=True
+    channel,
+    queue_name,
+    auto_delete=True,
+    durable=False,
+    # exclusive=True
 )
 
 # Declare the worker queue
@@ -24,6 +29,8 @@ if queue.declare():
 # Bind the worker queue
 if queue.bind("direct-rpc-requests", "detect-objects"):
     print("Worker queue bound")
+
+unacknowledged = 0
 
 # Consume messages from RabbitMQ
 for message in queue.consume_messages():
@@ -63,4 +70,7 @@ for message in queue.consume_messages():
     response.publish("rpc-replies", message.properties["reply_to"])
 
     # Acknowledge the delivery of the RPC request message
-    message.ack()
+    unacknowledged += 1
+    if unacknowledged == 10:
+        message.ack(all_previous=True)
+        unacknowledged = 0

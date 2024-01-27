@@ -1,10 +1,16 @@
+import base64
+import hashlib
+import secrets
 import json
+import os
+import platform
 from typing import Dict, Any
 from collections import Counter
 
 import bentoml
 import torch
 import PIL
+import imagehash
 from bentoml.io import Image
 from bentoml.io import JSON
 
@@ -16,7 +22,9 @@ class Yolov8Runnable(bentoml.Runnable):
     def __init__(self):
         from ultralyticsplus import YOLO, download_from_hub
 
-        model_path = download_from_hub("chanelcolgate/valorant-object-detection")
+        hf_model_id = os.getenv("HF_MODEL_ID", "linhcuem/checker_TB_yolov8_ver2")
+
+        model_path = download_from_hub(hf_model_id)
         self.model = YOLO(model_path)
 
         if torch.cuda.is_available():
@@ -33,6 +41,8 @@ class Yolov8Runnable(bentoml.Runnable):
         self.model.overrides["agnostic_nms"] = False
         self.model.overrides["max_det"] = 1000
 
+        self.operating_system = platform.system()
+
     @bentoml.Runnable.method(batchable=False, batch_dim=0)
     def inference(self, input_imgs):
         # Return predictions only
@@ -44,16 +54,24 @@ class Yolov8Runnable(bentoml.Runnable):
 
     @bentoml.Runnable.method(batchable=False, batch_dim=0)
     def render(self, input_imgs):
+        h = hashlib.sha1()
+        h.update(str(imagehash.phash(input_imgs)).encode("utf-8"))
+        filename = f"{h.hexdigest()}.jpg"
+        if self.operating_system == "Windows":
+            filename = f"C:\\Users\\NGUYEN~1\\AppData\\Local\\Temp\{filename}"
+        else:
+            filename = f"/tmp/images/{filename}"
+
         # Return images with boxes and labels
         results = self.model(input_imgs)
         result = results[0]
         im_array = result.plot()
         im = PIL.Image.fromarray(im_array[..., ::-1])  # RGB PIL image
-        im.save("images/results.jpg")  # save image
+        im.save(filename)  # save image
 
         json_result = json.loads(result.tojson())
         class_counts = Counter(detection["name"] for detection in json_result)
-        return class_counts
+        return class_counts, filename
 
     @bentoml.Runnable.method(batchable=False, batch_dim=0)
     def annotation(self, input_imgs):
