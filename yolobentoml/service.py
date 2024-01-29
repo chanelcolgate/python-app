@@ -33,13 +33,15 @@ class Yolov8Runnable(bentoml.Runnable):
             self.model.cpu()
 
         # Config inference settings
-        self.inference_size = 416
+        self.inference_size = 640
 
         # Optional configs
-        self.model.overrides["conf"] = 0.5  # NMS confidence threshold
-        self.model.overrides["iou"] = 0.45  # NMS IoU threshold
-        self.model.overrides["agnostic_nms"] = False
-        self.model.overrides["max_det"] = 1000
+        # self.model.overrides["conf"] = 0.5  # NMS confidence threshold
+        # self.model.overrides["iou"] = 0.45  # NMS IoU threshold
+        # self.model.overrides["agnostic_nms"] = False
+        # self.model.overrides["max_det"] = 1000
+        self.model.conf = 0.5
+        self.model.iou = 0.45
 
         self.operating_system = platform.system()
 
@@ -60,6 +62,8 @@ class Yolov8Runnable(bentoml.Runnable):
         if self.operating_system == "Windows":
             filename = f"C:\\Users\\NGUYEN~1\\AppData\\Local\\Temp\{filename}"
         else:
+            if not os.path.exists("/tmp/images"):
+                os.makedirs("/tmp/images")
             filename = f"/tmp/images/{filename}"
 
         # Return images with boxes and labels

@@ -42,7 +42,7 @@ for message in queue.consume_messages():
     temp_file = utils.write_temp_file(message.body, message.properties["content_type"])
 
     # Detect objects
-    url = "http://localhost:3000/annotation"
+    url = "http://localhost:3000/render"
     payload = {}
     files = [("", (temp_file.split("/")[-1], open(temp_file, "rb"), "image/jpeg"))]
     headers = {"accept": "application/json"}

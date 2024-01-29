@@ -10,10 +10,18 @@ services:
       - label_studio_network
 
   bentoml:
-    image: chanelcolgate/yolo_v8_demo:sgqolwf5bsgptsky
+    image: chanelcolgate/yolo_v8_demo:wrkvtqv5coqvbuy3
     hostname: bentoml
+    # command: > 
+    #   bash -c "
+    #   if [ ! -d '/tmp/images' ]; then
+    #     mkdir /tmp/images
+    #   fi"
+    # command: sh -c "test -d /tmp/images || mkdir /tmp/images"
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend/src/images:/tmp/images
     networks:
       - label_studio_network
 
