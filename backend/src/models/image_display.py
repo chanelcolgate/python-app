@@ -3,10 +3,32 @@ from typing import Optional, Union
 from pydantic import BaseModel, validator
 from tortoise import fields, models
 
-from src.settings import Settings
-from src.models.check import CheckPublic
+from src.settings import settings
+from src.models.check import CheckPublic, Checks
 
-settings = Settings()
+
+class Images(models.Model):
+    """
+    The Image Display model
+    """
+
+    id = fields.IntField(pk=True)
+    image = fields.CharField(max_length=128, unique=True)
+    latitude = fields.FloatField()
+    longitude = fields.FloatField()
+    program: fields.ForeignKeyRelation[Checks] = fields.ForeignKeyField(
+        "models.Checks", related_name="images", null=False
+    )
+
+    class Meta:
+        table = "images"
+
+
+from src.models.check import Checks
+
+
+class Checks(Checks):
+    images: fields.ReverseRelation["Images"]
 
 
 class Location(BaseModel):
@@ -32,66 +54,55 @@ class Location(BaseModel):
 #         }
 
 
-class ImageObjectDetection(BaseModel):
-    image_src: str
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "image_src": "http://10.20.1.90/image/fee8c9b5-21ad-4854-b7c6-5632f42e97e4.jpeg",
-            }
-        }
-
-
-class ImageDisplayBase(BaseModel):
+class ImageBase(BaseModel):
     image: str
-    limit: int
     location: Location
-    check: CheckPublic
+    program_id: int
 
     class Config:
         json_schema_extra = {
             "example": {
                 "image": "http://10.20.1.90/image/002df0a7-25c2-47d0-b3e8-e513c3c0d9de.jpeg",
-                "limit": 300,
                 "location": {"latitude": 16.0590299, "longitude": 108.2075305},
-                "check": {
-                    "name": "hộp",
-                    "type_check": "trưng bày base",
-                    "hop_ytv": 4,
-                    "hop_vtg": 1,
-                    "hop_jn": 1,
-                },
+                "program_id": 2,
             }
         }
 
 
-class ImageDisplayCreate(ImageDisplayBase):
+class ImageCreate(ImageBase):
     pass
 
 
-class ImageDisplayPublic(ImageDisplayCreate):
-    if settings.SHOW:
-        id: int
-
-    # duplicate: ImageDuplicate
-    object_detection: ImageObjectDetection
+class ImagePublic(ImageBase):
+    id: int
 
     class Config:
         json_schema_extra = {
             "example": {
-                "image": "http://10.20.1.90/image/002df0a7-25c2-47d0-b3e8-e513c3c0d9de.jpeg",
-                "limit": 300,
+                "image": "src/tmp/5b77964d8e3024a252657ca4a75cb3ebbaeac074.jpg",
                 "location": {"latitude": 16.0590299, "longitude": 108.2075305},
-                "check": {
-                    "name": "hộp",
-                    "type_check": "trưng bày base",
-                    "hop_ytv": 4,
-                    "hop_vtg": 1,
-                    "hop_jn": 1,
-                },
-                "object_detection": {
-                    "image_src": "https://jodies.de/ipcalc?host=172.25.0.0&mask1=20&mask2=29"
-                },
+                "program_id": 2,
+                "id": 10,
+            }
+        }
+
+
+class ImageUpdate(BaseModel):
+    program_id: int
+
+
+class ImageDisplayPublic(BaseModel):
+    result: str
+    reason: str
+    program_id: Optional[int]
+    image_url: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "result": "Đạt",
+                "reason": "",
+                "program_id": 2,
+                "image_url": "a82d779d5fe2565eb351bc1f828e779ff5637db3.jpg",
             }
         }

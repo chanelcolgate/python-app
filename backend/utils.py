@@ -38,6 +38,7 @@ def read_and_write_url(image_url):
 
         # Open the image using PIL
         image = Image.open(BytesIO(response.content))
+        image = image.convert("RGB")
 
         # Save the image locally
         operating_system = platform.system()

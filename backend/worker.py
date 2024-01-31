@@ -42,25 +42,30 @@ for message in queue.consume_messages():
     temp_file = utils.write_temp_file(message.body, message.properties["content_type"])
 
     # Detect objects
-    url = "http://localhost:3000/render"
-    payload = {}
-    files = [("", (temp_file.split("/")[-1], open(temp_file, "rb"), "image/jpeg"))]
-    headers = {"accept": "application/json"}
-    response = requests.request("POST", url, headers=headers, data=payload, files=files)
-    body = json.loads(response.text)
+    with open(temp_file, "rb") as file:
+        url = "http://localhost:3000/render"
+        payload = {}
+        files = [("", (temp_file.split("/")[-1], file, "image/jpeg"))]
+        headers = {"accept": "application/json"}
+        response = requests.request(
+            "POST", url, headers=headers, data=payload, files=files
+        )
+        body = json.loads(response.text)
 
     # Build response properties including the timestamp from the first publish
     properties = {
         "app_id": "Consumer",
         "content_type": message.properties["content_type"],
-        "headers": {"first_publish": message.properties["timestamp"]},
+        "headers": {
+            "first_publish": message.properties["timestamp"],
+        },
     }
 
     # The result file cound just be the original image if nothing detected
     # body = utils.read_image(temp_file)
 
     # Remove the temp file
-    # os.unlink(temp_file)
+    os.unlink(temp_file)
 
     # REmove the result file
     # os.unlink(result_file)

@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "this-really-needs-to-be-changed"
     DATABASE_URL: str
     DATABASE_HOST: str
+    RABBITMQ_URL: str
 
     class Config:
         env_file = ".env"
+
+
+settings = Settings()

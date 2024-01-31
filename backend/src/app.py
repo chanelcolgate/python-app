@@ -1,12 +1,26 @@
+import os
+
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 
-from src.settings import Settings
+from src.settings import settings
 from src.routes.check import check_router
 from src.routes.image_display import image_display_router
 
-settings = Settings()
+PATH = os.path.abspath(os.path.dirname(__file__))
 app = FastAPI()
+
+app.mount("/images", StaticFiles(directory=PATH + "/images"), name="images")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Register routes
 app.include_router(check_router, prefix="/check")
@@ -29,7 +43,7 @@ TORTOISE_ORM = {
     "connections": {"default": settings.DATABASE_URL},
     "apps": {
         "models": {
-            "models": ["src.models.check", "aerich.models"],
+            "models": ["src.models.image_display", "aerich.models"],
             "default_connection": "default",
         }
     },

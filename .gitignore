@@ -5,3 +5,4 @@ data
 newsbotpostgres
 yolov8n.pt
 *.jpg
+.env

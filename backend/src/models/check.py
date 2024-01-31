@@ -3,9 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, validator
 from tortoise import fields, models
 
-from src.settings import Settings
-
-settings = Settings()
+from src.settings import settings
 
 
 class Checks(models.Model):

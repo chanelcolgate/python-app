@@ -2,10 +2,9 @@ from typing import List, Any, Union, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, status, Query, Body, Depends
 
-from src.models.check import CheckPublic, CheckCreate, CheckUpdate, Checks
-from src.settings import Settings
-
-settings = Settings()
+from src.models.check import CheckPublic, CheckCreate, CheckUpdate
+from src.models.image_display import Checks
+from src.settings import settings
 
 check_router = APIRouter(tags=["Check"])
 
