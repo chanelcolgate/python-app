@@ -17,7 +17,7 @@ queue_name = f"rpc-worker-{os.getpid()}"
 queue = rabbitpy.Queue(
     channel,
     queue_name,
-    auto_delete=True,
+    auto_delete=False,
     durable=False,
     # exclusive=True
 )

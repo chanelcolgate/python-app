@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     DATABASE_HOST: str
     RABBITMQ_URL: str
+    LIMIT: int = 300
 
     class Config:
         env_file = ".env"

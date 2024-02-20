@@ -1,0 +1,9 @@
+[tool.black]
+line-length = 80
+target-version = ['py38', 'py310']
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s:%(name)s:%(levelname)s:%(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"

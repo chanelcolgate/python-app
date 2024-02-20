@@ -1,8 +1,11 @@
 .venv
 venv
+.env
+.coverage
+
 __pycache__
+
 data
 newsbotpostgres
 yolov8n.pt
 *.jpg
-.env

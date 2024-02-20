@@ -2,6 +2,7 @@ import hashlib
 import imghdr
 import os
 import platform
+import base64
 from io import BytesIO
 
 import requests
@@ -53,6 +54,30 @@ def read_and_write_url(image_url):
         return filename
     except requests.exceptions.RequestException as e:
         raise ValueError(f"Error reading image from URL: {e}")
+    except Exception as e:
+        raise ValueError(f"Error writing image to {filename}: {e}")
+
+
+def read_and_write_base64(image_b64):
+    decoded = base64.b64decode(image_b64)
+    h = hashlib.sha1()
+    h.update(decoded)
+    filename = f"{h.hexdigest()}.jpg"
+    try:
+        # Open the image using PIL
+        image = Image.open(BytesIO(decoded))
+        image = image.convert("RGB")
+
+        # Save the image locally
+        operating_system = platform.system()
+
+        if operating_system == "Windows":
+            fielname = f"C:\\Users\\NGUYEN~1\\AppData\\Local\\Temp\{filename}"
+        else:
+            filename = f"/tmp/{filename}"
+
+        image.save(filename)
+        return filename
     except Exception as e:
         raise ValueError(f"Error writing image to {filename}: {e}")
 
