@@ -7,8 +7,9 @@ from datetime import datetime
 import utils
 import requests
 
+url = os.environ["BENTOML_URL"]
 # Open the connection and the channel
-connection = rabbitpy.Connection()
+connection = rabbitpy.Connection(os.environ["RABBITMQ_URL"])
 channel = connection.channel()
 channel.prefetch_count(10)
 
@@ -39,11 +40,12 @@ for message in queue.consume_messages():
     print(f"Received RPC request published {duration:.2f} seconds ago")
 
     # Write out the message body to a tempfile for facial detection process
-    temp_file = utils.write_temp_file(message.body, message.properties["content_type"])
+    temp_file = utils.write_temp_file(
+        message.body, message.properties["content_type"]
+    )
 
     # Detect objects
     with open(temp_file, "rb") as file:
-        url = "http://localhost:3000/render"
         payload = {}
         files = [("", (temp_file.split("/")[-1], file, "image/jpeg"))]
         headers = {"accept": "application/json"}

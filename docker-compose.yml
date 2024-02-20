@@ -82,6 +82,68 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq-db:/var/lib/rabbitmq
+    networks:
+      - label_studio_network
+
+
+  declare:
+    image: "chanelcolgate/backend:v1"
+    container_name: declare
+    command: "declare_rabbitmq.py"
+    environment:
+      DEBUG: false
+      DATABASE_HOST: db
+      DATABASE_URL: postgres://odoo:odoo@db:5432/vsk
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/%2F
+      SHOW: true
+      LIMIT: 300
+    depends_on:
+      - db
+      - rabbitmq
+    networks:
+      - label_studio_network
+
+
+  worker:
+    image: "chanelcolgate/backend:v1"
+    container_name: worker
+    restart: always
+    command: "worker.py"
+    environment:
+      DEBUG: false
+      DATABASE_HOST: db
+      DATABASE_URL: postgres://odoo:odoo@db:5432/vsk
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/%2F
+      BENTOML_URL: http://bentoml:3000/render
+      SHOW: true
+      LIMIT: 300
+    depends_on:
+      - declare
+      - db
+      - rabbitmq
+    networks:
+      - label_studio_network
+
+
+  main:
+    image: "chanelcolgate/backend:v1"
+    container_name: main
+    command: "main.py"
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: true
+      DATABASE_HOST: db
+      DATABASE_URL: postgres://odoo:odoo@db:5432/vsk
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/%2F
+      SHOW: true
+      LIMIT: 300
+    depends_on:
+      - db
+      - rabbitmq
+    networks:
+      - label_studio_network
+
 
 volumes:
   db-data:
