@@ -1,53 +1,12 @@
 version: "3.8"
 services:
-  label_studio:
-    image: heartexlabs/label-studio:latest
-    ports:
-      - 8508:8080
-    volumes:
-      - ./data:/label-studio/data
-    networks:
-      - label_studio_network
-
   bentoml:
     image: chanelcolgate/yolo_v8_demo:wrkvtqv5coqvbuy3
     hostname: bentoml
-    # command: > 
-    #   bash -c "
-    #   if [ ! -d '/tmp/images' ]; then
-    #     mkdir /tmp/images
-    #   fi"
-    # command: sh -c "test -d /tmp/images || mkdir /tmp/images"
     ports:
       - "3000:3000"
     volumes:
       - ./backend/src/images:/tmp/images
-    networks:
-      - label_studio_network
-
-  redis:
-    image: redis:alpine
-    hostname: redis
-    volumes:
-      - "./data/redis:/data"
-    expose:
-      - 6379
-    networks:
-      - label_studio_network
-
-  server:
-    image: chanelcolgate/labelstudioml:3cac81738ebae8afeb2616e1f3a3d9a1e767cbf5
-    environment:
-      - RQ_QUEUE_NAME=default
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    ports:
-      - "9092:9090"
-    depends_on:
-      - redis
-    volumes:
-      - "./logs:/tmp"
-      - "./data/media:/data"
     networks:
       - label_studio_network
 
@@ -144,18 +103,9 @@ services:
     depends_on:
       - db
       - rabbitmq
-      - worker
     networks:
       - label_studio_network
 
-  webserver:
-    build: './nginx'
-    ports:
-      - "80:80"
-    depends_on:
-      - main
-    networks:
-      - label_studio_network
 
 volumes:
   db-data:

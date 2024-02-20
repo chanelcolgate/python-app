@@ -38,3 +38,39 @@ Run the container using
 docker run -e NBT_ACCESS_TOKEN=<token> chanelcolgate/newsbot
 ```
 Replace `<token>` with the Telegram API Token that was generated.
+
+#### How to run docker-compose.yaml
+Step 1: Create folder `images` and folder `tmp`
+Step 2: Fill path folder `images` and `tmp` into docker-compose in service `main`
+Step 3:
+```
+docker-compose up -d bentoml
+```
+Step 4:
+```
+docker-compose up -d db
+```
+Step 5:
+```
+docker-compose up -d adminer
+```
+Step 6:
+```
+docker-compose up -d rabbitmq
+```
+Step 7:
+```
+docker-compose up -d declare
+```
+Step 8:
+```
+docker-compose up -d worker
+```
+Step 9:
+```
+docker-compose up -d main
+```
+Step 10:
+```
+docker-compose up -d webserver
+```
