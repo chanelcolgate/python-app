@@ -102,8 +102,8 @@ class ImagePublic(ImageBase):
 
 
 class ImageUpdate(BaseModel):
-    image_result: Optional[str]
-    pass_fail: Optional[State]
+    image_result: Optional[str] = None
+    pass_fail: Optional[State] = None
 
 
 class ImageDisplayPublic(BaseModel):
@@ -115,7 +115,7 @@ class ImageDisplayPublic(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "result": "Success",
+                "result": "pass",
                 "reason": "",
                 "program_id": "HPLO_01",
                 "image_url": "a82d779d5fe2565eb351bc1f828e779ff5637db3.jpg",

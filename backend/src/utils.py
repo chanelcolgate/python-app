@@ -15,10 +15,10 @@ from PIL import Image
 import utils
 from src.settings import settings
 from src.models.check import CheckPublic
-from src.models.image_display import Checks, ImageUpdate
+from src.models.image_display import Checks, ImageUpdate, State, Images
 
 
-async def detect_objects(body) -> dict:
+async def detect_objects(image_id, body) -> dict:
     connection = rabbitpy.Connection(settings.RABBITMQ_URL)
     channel = connection.channel()
 
@@ -116,13 +116,20 @@ async def detect_objects(body) -> dict:
                 error_string += f"Not enough {key}, "
         except KeyError:
             error_string += f"Don't have {key}, "
+    image_result = "src/images/{}".format(image_url.split("/")[-1])
     if sum_check >= sum_matrix:
-        message = "Pass"
+        image_update = ImageUpdate(
+            image_result=image_result, pass_fail=State.PASS
+        )
+        message = State.PASS
         reason = ""
     else:
-        message = "Fail"
+        image_update = ImageUpdate(
+            image_result=image_result, pass_fail=State.FAIL
+        )
+        message = State.FAIL
         reason += error_string
-    image_update = ImageUpdate()
+    await Images.get(id=image_id).update(**image_update.dict())
     return {
         "result": message,
         "reason": reason.rstrip(", "),

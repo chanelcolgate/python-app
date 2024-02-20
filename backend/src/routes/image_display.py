@@ -176,7 +176,13 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
 @image_display_router.get("/", response_model=List[ImagePublic])
 async def retrieve_all_checks() -> List[ImagePublic]:
     images = await Images.all().values(
-        "id", "image", "latitude", "longitude", program_id="program__id"
+        "id",
+        "image",
+        "latitude",
+        "longitude",
+        "image_result",
+        "pass_fail",
+        program_id="program__id",
     )
     return [
         ImagePublic(
@@ -186,6 +192,8 @@ async def retrieve_all_checks() -> List[ImagePublic]:
                 latitude=image["latitude"], longitude=image["longitude"]
             ),
             program_id=image["program_id"],
+            image_result=image["image_result"],
+            pass_fail=image["pass_fail"],
         )
         for image in images
     ]
@@ -195,7 +203,13 @@ async def retrieve_all_checks() -> List[ImagePublic]:
 async def retrieve_image(id: int) -> ImagePublic:
     try:
         image = await Images.get(id=id).values(
-            "id", "image", "latitude", "longitude", program_id="program__id"
+            "id",
+            "image",
+            "latitude",
+            "longitude",
+            "image_result",
+            "pass_fail",
+            program_id="program__id",
         )
     except DoesNotExist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -206,40 +220,35 @@ async def retrieve_image(id: int) -> ImagePublic:
             latitude=image["latitude"], longitude=image["longitude"]
         ),
         program_id=image["program_id"],
+        image_result=image["image_result"],
+        pass_fail=image["pass_fail"],
     )
 
 
-@image_display_router.post("/new-image")
-async def create_image(body: ImageCreate = Body(...)) -> dict:
-    body_json = body.dict(exclude_unset=True)
-    filename = read_and_write_url(body_json["image"])
-    try:
-        checks = await Checks.get(id=body_json["program_id"])
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Checks {body_json['program_id']} does not exist",
-        )
-    await Images.create(
-        image=filename,
-        latitude=body_json["location"]["latitude"],
-        longitude=body_json["location"]["longitude"],
-        program=checks,
-    )
-    return {"message": "Check created successfully"}
+# @image_display_router.post("/new-image")
+# async def create_image(body: ImageCreate = Body(...)) -> dict:
+#     body_json = body.dict(exclude_unset=True)
+#     filename = read_and_write_url(body_json["image"])
+#     try:
+#         checks = await Checks.get(id=body_json["program_id"])
+#     except DoesNotExist:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             detail=f"Checks {body_json['program_id']} does not exist",
+#         )
+#     await Images.create(
+#         image=filename,
+#         latitude=body_json["location"]["latitude"],
+#         longitude=body_json["location"]["longitude"],
+#         program=checks,
+#     )
+#     return {"message": "Check created successfully"}
 
 
 @image_display_router.put("/edit/{id}")
 async def update_image(image_update: ImageUpdate, id: int) -> dict:
     try:
-        check = await Checks.get(id=image_update.dict()["program_id"])
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Checks {image_update.dict()['program_id']} does not exist",
-        )
-    try:
-        await Images.get(id=id).update(program=check)
+        await Images.get(id=id).update(**image_update.dict())
     except DoesNotExist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return {"message": "Image updated successuflly"}

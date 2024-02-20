@@ -25,7 +25,7 @@ async def test_showroom_grading_1(client: AsyncClient):
     assert response.status_code == status.HTTP_200_OK, response.text
 
     data = response.json()
-    assert data["result"] == "Pass"
+    assert data["result"] == "pass"
 
     await client.delete(f"/image-display/HPLO")
 
@@ -49,7 +49,7 @@ async def test_showroom_grading_2(client: AsyncClient):
     assert response.status_code == status.HTTP_200_OK, response.text
 
     data = response.json()
-    assert data["result"] == "Pass"
+    assert data["result"] == "pass"
 
     await client.delete(f"/image-display/HPLO")
 
@@ -98,9 +98,9 @@ async def test_showroom_grading_4(client: AsyncClient):
     assert response.status_code == status.HTTP_200_OK, response.text
 
     # logging.info(response.json())
-    # {'result': 'Fail', 'reason': "Don't have hop_jn, Not enough hop_vtg", 'program_id': 'HPLO_02', 'image_url': '5aa181e6ca8f607be9b240904f9f245f0ed37e7b.jpg'}
+    # {'result': 'fail', 'reason': "Don't have hop_jn, Not enough hop_vtg", 'program_id': 'HPLO_02', 'image_url': '5aa181e6ca8f607be9b240904f9f245f0ed37e7b.jpg'}
 
     data = response.json()
-    assert data["result"] == "Fail"
+    assert data["result"] == "fail"
 
     await client.delete("/image-display/HPLO")
