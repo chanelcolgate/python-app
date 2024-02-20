@@ -12,6 +12,9 @@ from src.routes.image_display import image_display_router
 PATH = os.path.abspath(os.path.dirname(__file__))
 app = FastAPI()
 
+if not os.path.exists("src/images"):
+    os.makedirs("src/images")
+
 app.mount("/images", StaticFiles(directory=PATH + "/images"), name="images")
 
 app.add_middleware(

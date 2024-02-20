@@ -87,7 +87,7 @@ services:
 
 
   declare:
-    image: "chanelcolgate/backend:v1"
+    image: chanelcolgate/backend:5f3e0ce67605a91b6a0d11b0c04a95eca30fe3e1
     container_name: declare
     command: "declare_rabbitmq.py"
     environment:
@@ -105,7 +105,7 @@ services:
 
 
   worker:
-    image: "chanelcolgate/backend:v1"
+    image: chanelcolgate/backend:5f3e0ce67605a91b6a0d11b0c04a95eca30fe3e1
     container_name: worker
     restart: always
     command: "worker.py"
@@ -126,7 +126,7 @@ services:
 
 
   main:
-    image: "chanelcolgate/backend:v1"
+    image: chanelcolgate/backend:5f3e0ce67605a91b6a0d11b0c04a95eca30fe3e1
     container_name: main
     command: "main.py"
     ports:
