@@ -48,6 +48,6 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
         cd backend
-        docker login -u ${DOCKER_USERNAME} - p ${DOCKER_PASSWORD}
+        docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
         docker build -t ${DOCKER_USERNAME}/backend:${GITHUB_SHA} .
         docker push ${DOCKER_USERNAME}/backend:${GITHUB_SHA}
