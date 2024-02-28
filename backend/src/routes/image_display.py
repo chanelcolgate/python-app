@@ -257,6 +257,7 @@ async def update_image(image_update: ImageUpdate, id: int) -> dict:
 @image_display_router.delete("/{program_id}")
 async def delete_images(program_id: str) -> dict:
     try:
+        await Checks.get(id=program_id)
         images = await Images.filter(program__id=program_id)
         for image in images:
             os.unlink(os.path.abspath(image.image))

@@ -46,7 +46,7 @@ services:
 
 
   declare:
-    image: chanelcolgate/backend:4763a9c7d9d24cf7df632b01c5f1cc3b2177dd2f
+    image: chanelcolgate/backend:5f3e0ce67605a91b6a0d11b0c04a95eca30fe3e1
     container_name: declare
     command: "declare_rabbitmq.py"
     environment:
@@ -77,7 +77,6 @@ services:
       SHOW: true
       LIMIT: 300
     depends_on:
-      - declare
       - db
       - rabbitmq
     networks:

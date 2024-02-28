@@ -4,7 +4,8 @@ import logging
 from pydantic_settings import BaseSettings
 
 logging.basicConfig(
-    level=logging.INFO, format="%(levelname)s: %(asctime)s - %(funcName)s - %(message)s"
+    level=logging.INFO,
+    format="%(levelname)s: %(asctime)s - %(funcName)s - %(message)s",
 )
 log = logging.getLogger("vsk")
 
@@ -21,6 +22,7 @@ class Settings(BaseSettings):
     DATABASE_HOST: str
     RABBITMQ_URL: str
     LIMIT: int = 300
+    BENTOML_URL: str = "http://localhost:3000/render"
 
     class Config:
         env_file = ".env"
