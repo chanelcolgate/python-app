@@ -58,13 +58,14 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
         cd yolobentoml
-        docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-        bentoml build --containerize
+        # docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        # bentoml build --containerize
         # CONTAINER_NAME=$(bentoml list 2>&1 | grep yolo_v8 | awk '{print $1}')
         # echo $CONTAINER_NAME
         # docker tag $CONTAINER_NAME ${DOCKER_USERNAME}/$CONTAINER_NAME
         # docker push ${DOCKER_USERNAME}/$CONTAINER_NAME
+        docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
         $env:CONTAINER_NAME=$(bentoml list -o json | jq -r ".[0].tag")
         echo $env:CONTAINER_NAME
-        docker tag $env:CONTAINER_NAME ${DOCKER_USERNAME}/$env:CONTAINER_NAME
-        docker push ${DOCKER_USERNAME}/$env:CONTAINER_NAME
+        docker tag $env:CONTAINER_NAME $env:DOCKER_USERNAME/$env:CONTAINER_NAME
+        docker push $env:DOCKER_USERNAME/$env:CONTAINER_NAME
