@@ -64,7 +64,7 @@ jobs:
         # echo $CONTAINER_NAME
         # docker tag $CONTAINER_NAME ${DOCKER_USERNAME}/$CONTAINER_NAME
         # docker push ${DOCKER_USERNAME}/$CONTAINER_NAME
-        $env:CONTAINER_NAME=$(bentoml list -o json | jq ".[0].tag")
+        $env:CONTAINER_NAME=$(bentoml list -o json | jq -r ".[0].tag")
         echo $env:CONTAINER_NAME
         docker tag $env:CONTAINER_NAME ${DOCKER_USERNAME}/$env:CONTAINER_NAME
         docker push ${DOCKER_USERNAME}/$env:CONTAINER_NAME
