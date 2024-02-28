@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import secrets
+import tempfile
 import json
 import os
 import platform
@@ -59,12 +60,7 @@ class Yolov8Runnable(bentoml.Runnable):
         h = hashlib.sha1()
         h.update(str(imagehash.phash(input_imgs)).encode("utf-8"))
         filename = f"{h.hexdigest()}.jpg"
-        if self.operating_system == "Windows":
-            filename = f"C:\\Users\\NGUYEN~1\\AppData\\Local\\Temp\{filename}"
-        else:
-            if not os.path.exists("/tmp/images"):
-                os.makedirs("/tmp/images")
-            filename = f"/tmp/images/{filename}"
+        filename = tempfile.gettempdir() + "/" + filename
 
         # Return images with boxes and labels
         results = self.model(input_imgs)
