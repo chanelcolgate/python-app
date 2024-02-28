@@ -65,9 +65,9 @@ jobs:
         # docker tag $CONTAINER_NAME ${DOCKER_USERNAME}/$CONTAINER_NAME
         # docker push ${DOCKER_USERNAME}/$CONTAINER_NAME
         docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
-        docker buildx install
-        bentoml build --containerize
+        bentoml build
         $env:CONTAINER_NAME=$(bentoml list -o json | jq -r ".[0].tag")
+        bentoml containerize $env:CONTAINER_NAME
         echo $env:CONTAINER_NAME
         docker tag $env:CONTAINER_NAME $env:DOCKER_USERNAME/$env:CONTAINER_NAME
         docker push $env:DOCKER_USERNAME/$env:CONTAINER_NAME
