@@ -34,7 +34,7 @@ jobs:
   docker-build:
     timeout-minutes: 3600
     runs-on: windows-2019
-    needs: lint
+    # needs: lint
 
     steps:
     - name: Checkout
