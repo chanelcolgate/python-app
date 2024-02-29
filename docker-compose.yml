@@ -10,7 +10,7 @@ services:
       - label_studio_network
 
   bentoml:
-    image: chanelcolgate/yolo_v8_demo:wrkvtqv5coqvbuy3
+    image: chanelcolgate/yolo_v8_demo:fzdi6u6wc2awarek
     hostname: bentoml
     # command: > 
     #   bash -c "
@@ -20,6 +20,10 @@ services:
     # command: sh -c "test -d /tmp/images || mkdir /tmp/images"
     ports:
       - "3000:3000"
+    environment:
+      - HF_MODEL_ID=linhcuem/checker_TB_yolov8_ver2
+      - MODEL_CONF=0.5
+      - MODEL_IOU=0.45
     volumes:
       - ./backend/src/images:/tmp/images
     networks:
@@ -87,7 +91,7 @@ services:
 
 
   declare:
-    image: chanelcolgate/backend:5f3e0ce67605a91b6a0d11b0c04a95eca30fe3e1
+    image: chanelcolgate/backend:68e29a7850f24fbc77c3ecde5395f29b3c013e37
     container_name: declare
     command: "declare_rabbitmq.py"
     environment:
@@ -105,7 +109,7 @@ services:
 
 
   worker:
-    image: chanelcolgate/backend:5f3e0ce67605a91b6a0d11b0c04a95eca30fe3e1
+    image: chanelcolgate/backend:68e29a7850f24fbc77c3ecde5395f29b3c013e37
     container_name: worker
     restart: always
     command: "worker.py"
@@ -125,7 +129,7 @@ services:
 
 
   main:
-    image: chanelcolgate/backend:5f3e0ce67605a91b6a0d11b0c04a95eca30fe3e1
+    image: chanelcolgate/backend:68e29a7850f24fbc77c3ecde5395f29b3c013e37
     container_name: main
     command: "main.py"
     ports:

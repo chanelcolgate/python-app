@@ -64,3 +64,8 @@ jobs:
         echo $CONTAINER_NAME
         docker tag $CONTAINER_NAME ${DOCKER_USERNAME}/$CONTAINER_NAME
         docker push ${DOCKER_USERNAME}/$CONTAINER_NAME
+        # $env:COMPOSE_DOCKER_CLI_BUILD=1
+        # $env:DOCKER_BUILDKIT=1
+        # docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
+        # bentoml build --containerize
+        # $env:CONTAINER_NAME=$(bentoml list -o json | jq -r ".[0].tag")
