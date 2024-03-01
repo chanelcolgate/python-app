@@ -7,9 +7,12 @@ from datetime import datetime
 import utils
 import requests
 
-url = os.environ["BENTOML_URL"]
+url = os.getenv("BENTOML_URL", "http://localhost:3000/render")
+url_rabbitmq = os.getenv(
+    "RABBITMQ_URL", "amqp://guest:guest@localhost:5672/%2F"
+)
 # Open the connection and the channel
-connection = rabbitpy.Connection(os.environ["RABBITMQ_URL"])
+connection = rabbitpy.Connection(url_rabbitmq)
 channel = connection.channel()
 channel.prefetch_count(10)
 

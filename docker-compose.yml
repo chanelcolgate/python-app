@@ -10,7 +10,8 @@ services:
       - label_studio_network
 
   bentoml:
-    image: chanelcolgate/yolo_v8_demo:fzdi6u6wc2awarek
+    #image: chanelcolgate/yolo_v8_demo:fzdi6u6wc2awarek
+    image: yolo_v8_demo:tspvntwxbw2birek
     hostname: bentoml
     # command: > 
     #   bash -c "

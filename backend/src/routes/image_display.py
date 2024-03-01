@@ -143,11 +143,18 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
         limit=settings.LIMIT,
     )
     for result in results:
+        template = cv2.imread(os.path.abspath(result["image"]), 0)
+
         main_image = cv2.imread(os.path.abspath(main_image_path))
         gray_main_image = cv2.cvtColor(main_image, cv2.COLOR_BGR2GRAY)
 
-        template = cv2.imread(os.path.abspath(result["image"]), 0)
-        res = cv2.matchTemplate(gray_main_image, template, cv2.TM_CCOEFF_NORMED)
+        try:
+            res = cv2.matchTemplate(
+                gray_main_image, template, cv2.TM_CCOEFF_NORMED
+            )
+        except Exception:
+            res = numpy.array([[0]])
+
         conf = round(res.max() * 100, 2)
         if conf > 90:
             return {
@@ -261,6 +268,7 @@ async def delete_images(program_id: str) -> dict:
         images = await Images.filter(program__id=program_id)
         for image in images:
             os.unlink(os.path.abspath(image.image))
+            # os.unlink(os.path.abspath(image.image_result))
             await image.delete()
     except DoesNotExist:
         raise HTTPException(
