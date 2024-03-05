@@ -113,9 +113,9 @@ async def detect_objects(image_id, body) -> dict:
                 result_dict[key] = detection_dict[key]
                 sum_check += detection_dict[key]
             else:
-                error_string += f"Not enough {key}, "
+                error_string += f"Không đủ {key}, "
         except KeyError:
-            error_string += f"Don't have {key}, "
+            error_string += f"Không có {key}, "
     image_result = "src/images/{}".format(image_url.split("/")[-1])
     if sum_check >= sum_matrix:
         image_update = ImageUpdate(
