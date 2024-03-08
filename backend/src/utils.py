@@ -11,11 +11,21 @@ from typing import Optional
 import rabbitpy
 import requests
 from PIL import Image
+from fastapi import HTTPException, Depends
+from fastapi.security import APIKeyHeader
 
 import utils
 from src.settings import settings
 from src.models.check import CheckPublic
 from src.models.image_display import Checks, ImageUpdate, State, Images
+
+
+async def api_token(token: str = Depends(APIKeyHeader(name="api-key"))):
+    if token not in settings.API_KEY.get("api_key"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials",
+        )
 
 
 async def detect_objects(image_id, body) -> dict:

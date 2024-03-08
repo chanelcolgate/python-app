@@ -1,5 +1,5 @@
-from typing import List, Any, Union, Dict, Optional
 import io
+from typing import List, Any, Union, Dict, Optional
 
 from fastapi import (
     APIRouter,
@@ -18,6 +18,7 @@ import numpy as np
 from src.models.check import CheckPublic, CheckCreate, CheckUpdate
 from src.models.image_display import Checks
 from src.settings import settings
+from src.utils import api_token
 
 check_router = APIRouter(tags=["Check"])
 
@@ -30,26 +31,37 @@ async def get_checks_or_404(id: str) -> Checks:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@check_router.get("/", response_model=List[CheckPublic])
+@check_router.get(
+    "/",
+    response_model=List[CheckPublic],
+    dependencies=[Depends(api_token)],
+)
 async def retrieve_all_checks() -> List[CheckPublic]:
+    key = settings.API_KEY.get("api_key")
     checks = await Checks.all()
     return [CheckPublic.from_orm(check) for check in checks]
 
 
-@check_router.get("/{id}", response_model=CheckPublic)
+@check_router.get(
+    "/{id}", response_model=CheckPublic, dependencies=[Depends(api_token)]
+)
 async def retrieve_check(
     checks: Checks = Depends(get_checks_or_404),
 ) -> CheckPublic:
     return CheckPublic.from_orm(checks)
 
 
-@check_router.post("/new", status_code=status.HTTP_201_CREATED)
+@check_router.post(
+    "/new",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(api_token)],
+)
 async def create_check(body: CheckCreate = Body(...)) -> dict:
     check_obj = await Checks.create(**body.dict(exclude_unset=True))
     return {"message": "Check created successuflly"}
 
 
-@check_router.post("/uploadfile")
+@check_router.post("/uploadfile", dependencies=[Depends(api_token)])
 async def upload_file(file: UploadFile = File(...)) -> list:
     # Check if the uploaded file is an Excel file
     if not file.filename.endswith(".xlsx"):
@@ -92,7 +104,7 @@ async def upload_file(file: UploadFile = File(...)) -> list:
         }
 
 
-@check_router.put("/edit/{id}")
+@check_router.put("/edit/{id}", dependencies=[Depends(api_token)])
 async def update_check(
     checks_update: CheckUpdate, checks: Checks = Depends(get_checks_or_404)
 ) -> dict:
@@ -101,7 +113,7 @@ async def update_check(
     return CheckPublic.from_orm(checks).dict()
 
 
-@check_router.delete("/{id}")
+@check_router.delete("/{id}", dependencies=[Depends(api_token)])
 async def delete_checks(id: str) -> dict:
     try:
         checks = await Checks.filter(id=id).delete()

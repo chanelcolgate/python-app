@@ -25,6 +25,7 @@ from src.models.image_display import (
 )
 from src.models.check import CheckPublic
 from src.settings import settings
+from src.utils import api_token
 from src.rabbitmq.connection import connection, channel, exchange
 from src.utils import detect_objects, read_and_write_url, read_and_write_base64
 
@@ -128,7 +129,9 @@ async def execute_query(latitude, longitude, program_id, limit):
 #     return result
 
 
-@image_display_router.post("/showroom-grading")
+@image_display_router.post(
+    "/showroom-grading", dependencies=[Depends(api_token)]
+)
 async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
     body_json = body.dict(exclude_unset=True)
     if body_json["image"].startswith(("https://", "http://")):
@@ -180,7 +183,9 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
     return result
 
 
-@image_display_router.get("/", response_model=List[ImagePublic])
+@image_display_router.get(
+    "/", response_model=List[ImagePublic], dependencies=[Depends(api_token)]
+)
 async def retrieve_all_checks() -> List[ImagePublic]:
     images = await Images.all().values(
         "id",
@@ -206,7 +211,9 @@ async def retrieve_all_checks() -> List[ImagePublic]:
     ]
 
 
-@image_display_router.get("/{id}", response_model=ImagePublic)
+@image_display_router.get(
+    "/{id}", response_model=ImagePublic, dependencies=[Depends(api_token)]
+)
 async def retrieve_image(id: int) -> ImagePublic:
     try:
         image = await Images.get(id=id).values(
@@ -252,7 +259,7 @@ async def retrieve_image(id: int) -> ImagePublic:
 #     return {"message": "Check created successfully"}
 
 
-@image_display_router.put("/edit/{id}")
+@image_display_router.put("/edit/{id}", dependencies=[Depends(api_token)])
 async def update_image(image_update: ImageUpdate, id: int) -> dict:
     try:
         await Images.get(id=id).update(**image_update.dict())
@@ -261,7 +268,7 @@ async def update_image(image_update: ImageUpdate, id: int) -> dict:
     return {"message": "Image updated successuflly"}
 
 
-@image_display_router.delete("/{program_id}")
+@image_display_router.delete("/{program_id}", dependencies=[Depends(api_token)])
 async def delete_images(program_id: str) -> dict:
     try:
         await Checks.get(id=program_id)
