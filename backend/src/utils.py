@@ -11,7 +11,7 @@ from typing import Optional
 import rabbitpy
 import requests
 from PIL import Image
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, status
 from fastapi.security import APIKeyHeader
 
 import utils

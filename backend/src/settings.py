@@ -35,7 +35,8 @@ class Settings(BaseSettings):
 
     @field_validator("AUTHORIZED_PATH")
     def conv(cls, path: str = "authorized.json"):
-        path = os.path.join(basedir, path)
+        path = os.path.join(basedir, "authorized/" + path)
+        logging.info(path)
         if not os.path.exists(path):
             return ""
         try:
