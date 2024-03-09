@@ -7,6 +7,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from src.settings import settings
 from src.routes.check import check_router
+from src.routes.auth import auth_router
 from src.routes.image_display import image_display_router
 
 PATH = os.path.abspath(os.path.dirname(__file__))
@@ -26,13 +27,14 @@ app.add_middleware(
 )
 
 # Register routes
+app.include_router(auth_router, prefix="/api/auth")
 app.include_router(check_router, prefix="/api/check")
 app.include_router(image_display_router, prefix="/api/image-display")
 
 
-@app.get("/")
-async def hello_world():
-    return {"hello": "world"}
+# @app.get("/")
+# async def hello_world():
+#     return {"hello": "world"}
 
 
 @app.on_event("startup")

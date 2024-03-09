@@ -183,60 +183,60 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
     return result
 
 
-@image_display_router.get(
-    "", response_model=List[ImagePublic], dependencies=[Depends(api_token)]
-)
-async def retrieve_all_checks() -> List[ImagePublic]:
-    images = await Images.all().values(
-        "id",
-        "image",
-        "latitude",
-        "longitude",
-        "image_result",
-        "pass_fail",
-        program_id="program__id",
-    )
-    return [
-        ImagePublic(
-            id=image["id"],
-            image=image["image"],
-            location=Location(
-                latitude=image["latitude"], longitude=image["longitude"]
-            ),
-            program_id=image["program_id"],
-            image_result=image["image_result"],
-            pass_fail=image["pass_fail"],
-        )
-        for image in images
-    ]
+# @image_display_router.get(
+#     "", response_model=List[ImagePublic], dependencies=[Depends(api_token)]
+# )
+# async def retrieve_all_checks() -> List[ImagePublic]:
+#     images = await Images.all().values(
+#         "id",
+#         "image",
+#         "latitude",
+#         "longitude",
+#         "image_result",
+#         "pass_fail",
+#         program_id="program__id",
+#     )
+#     return [
+#         ImagePublic(
+#             id=image["id"],
+#             image=image["image"],
+#             location=Location(
+#                 latitude=image["latitude"], longitude=image["longitude"]
+#             ),
+#             program_id=image["program_id"],
+#             image_result=image["image_result"],
+#             pass_fail=image["pass_fail"],
+#         )
+#         for image in images
+#     ]
 
 
-@image_display_router.get(
-    "/{id}", response_model=ImagePublic, dependencies=[Depends(api_token)]
-)
-async def retrieve_image(id: int) -> ImagePublic:
-    try:
-        image = await Images.get(id=id).values(
-            "id",
-            "image",
-            "latitude",
-            "longitude",
-            "image_result",
-            "pass_fail",
-            program_id="program__id",
-        )
-    except DoesNotExist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return ImagePublic(
-        id=image["id"],
-        image=image["image"],
-        location=Location(
-            latitude=image["latitude"], longitude=image["longitude"]
-        ),
-        program_id=image["program_id"],
-        image_result=image["image_result"],
-        pass_fail=image["pass_fail"],
-    )
+# @image_display_router.get(
+#     "/{id}", response_model=ImagePublic, dependencies=[Depends(api_token)]
+# )
+# async def retrieve_image(id: int) -> ImagePublic:
+#     try:
+#         image = await Images.get(id=id).values(
+#             "id",
+#             "image",
+#             "latitude",
+#             "longitude",
+#             "image_result",
+#             "pass_fail",
+#             program_id="program__id",
+#         )
+#     except DoesNotExist:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+#     return ImagePublic(
+#         id=image["id"],
+#         image=image["image"],
+#         location=Location(
+#             latitude=image["latitude"], longitude=image["longitude"]
+#         ),
+#         program_id=image["program_id"],
+#         image_result=image["image_result"],
+#         pass_fail=image["pass_fail"],
+#     )
 
 
 # @image_display_router.post("/new-image")
@@ -259,13 +259,13 @@ async def retrieve_image(id: int) -> ImagePublic:
 #     return {"message": "Check created successfully"}
 
 
-@image_display_router.put("/edit/{id}", dependencies=[Depends(api_token)])
-async def update_image(image_update: ImageUpdate, id: int) -> dict:
-    try:
-        await Images.get(id=id).update(**image_update.dict())
-    except DoesNotExist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return {"message": "Image updated successuflly"}
+# @image_display_router.put("/edit/{id}", dependencies=[Depends(api_token)])
+# async def update_image(image_update: ImageUpdate, id: int) -> dict:
+#     try:
+#         await Images.get(id=id).update(**image_update.dict())
+#     except DoesNotExist:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+#     return {"message": "Image updated successuflly"}
 
 
 @image_display_router.delete("/{program_id}", dependencies=[Depends(api_token)])

@@ -23,7 +23,7 @@ from src.models.image_display import Checks, ImageUpdate, State, Images
 async def api_token(token: str = Depends(APIKeyHeader(name="api-key"))):
     if token not in settings.API_KEY.get("api_key"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
         )
 
@@ -207,9 +207,11 @@ def read_and_write_url(image_url):
         image.save(filename)
         return filename
     except requests.exceptions.RequestException as e:
-        raise ValueError(f"Error reading image from URL: {e}")
+        # raise ValueError(f"Error reading image from URL: {e}")
+        raise HTTPException(400, f"Error reading image from URL: {e}")
     except Exception as e:
-        raise ValueError(f"Error writing image to {filename}: {e}")
+        # raise ValueError(f"Error writing image to {filename}: {e}")
+        raise HTTPException(400, f"Error writing image to {filename}: {e}")
 
 
 def read_and_write_base64(image_b64):
@@ -229,4 +231,5 @@ def read_and_write_base64(image_b64):
         image.save(filename)
         return filename
     except Exception as e:
-        raise ValueError(f"Error writing image to {filename}: {e}")
+        # raise ValueError(f"Error writing image to {filename}: {e}")
+        raise HTTPException(400, f"Error writing image to {filename}: {e}")
