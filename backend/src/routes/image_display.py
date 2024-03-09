@@ -184,7 +184,7 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
 
 
 @image_display_router.get(
-    "/", response_model=List[ImagePublic], dependencies=[Depends(api_token)]
+    "", response_model=List[ImagePublic], dependencies=[Depends(api_token)]
 )
 async def retrieve_all_checks() -> List[ImagePublic]:
     images = await Images.all().values(

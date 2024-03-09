@@ -111,7 +111,6 @@ services:
 
   worker:
     image: chanelcolgate/backend:68e29a7850f24fbc77c3ecde5395f29b3c013e37
-    container_name: worker
     restart: always
     command: "worker.py"
     environment:

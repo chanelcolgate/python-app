@@ -64,7 +64,7 @@ docker-compose up -d declare
 ```
 Step 8:
 ```
-docker-compose up -d worker
+docker-compose up -d --scale worker=3
 ```
 Step 9:
 ```

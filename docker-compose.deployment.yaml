@@ -1,17 +1,44 @@
-version: "3.8"
+version: "3"
+
+
 services:
+  webserver:
+    image: nginx:stable-alpine
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx:/etc/nginx/conf.d
+      - "${PWD-.}/images:/var/www/data/images"
+    networks:
+      - mind-core
+
   bentoml:
-    image: chanelcolgate/yolo_v8_demo:wrkvtqv5coqvbuy3
+    image: chanelcolgate/yolo_v8_demo:i6kbkuoxostnirek
+    restart: always
+    user: root
     hostname: bentoml
     ports:
       - "3000:3000"
+    environment:
+      - HF_MODEL_ID=linhcuem/checker_TB_yolov8_ver2
+      - MODEL_CONF=0.5
+      - MODEL_IOU=0.45
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: [gpu]
     volumes:
-      - ./backend/src/images:/tmp/images
+      - "${PWD-.}/images:/tmp/images"
     networks:
-      - label_studio_network
+      - mind-core
 
   db:
     image: postgres:13
+    restart: always
     ports:
       - "5432:5432"
     environment:
@@ -21,9 +48,9 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - db-data:/var/lib/postgresql/data/pgdata
-      - "./datasets:/docker-entrypoint-initdb.d"
+      - "${PWD-.}/datasets:/docker-entrypoint-initdb.d"
     networks:
-      - label_studio_network
+      - mind-core
 
   adminer:
     image: adminer
@@ -32,35 +59,37 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - label_studio_network
+      - mind-core
 
   rabbitmq:
     image: rabbitmq:3.12-management
+    restart: always
     ports:
       - "5672:5672"
       - "15672:15672"
     volumes:
       - rabbitmq-db:/var/lib/rabbitmq
     networks:
-      - label_studio_network
+      - mind-core
 
 
   declare:
     image: chanelcolgate/backend:5f3e0ce67605a91b6a0d11b0c04a95eca30fe3e1
+    restart: always
     container_name: declare
     command: "declare_rabbitmq.py"
     environment:
-      DEBUG: false
+      # DEBUG: false
       DATABASE_HOST: db
       DATABASE_URL: postgres://odoo:odoo@db:5432/vsk
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/%2F
-      SHOW: true
+      # SHOW: true
       LIMIT: 300
     depends_on:
       - db
       - rabbitmq
     networks:
-      - label_studio_network
+      - mind-core
 
 
   worker:
@@ -69,46 +98,51 @@ services:
     restart: always
     command: "worker.py"
     environment:
-      DEBUG: false
+      # DEBUG: false
       DATABASE_HOST: db
       DATABASE_URL: postgres://odoo:odoo@db:5432/vsk
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/%2F
       BENTOML_URL: http://bentoml:3000/render
-      SHOW: true
+      # SHOW: true
       LIMIT: 300
     depends_on:
       - db
       - rabbitmq
+      - declare
     networks:
-      - label_studio_network
+      - mind-core
 
 
   main:
-    image: chanelcolgate/backend:5f3e0ce67605a91b6a0d11b0c04a95eca30fe3e1
+    image: chanelcolgate/backend:602d5a9cbb8c5b93593c9103cdd66ff3848851c5
+    restart: always
     container_name: main
     command: "main.py"
     ports:
       - "8000:8000"
     volumes:
-      - "${PWD-.}/backend/src/images:/app/src/images"
-      - "${PWD-}./backend/src/tmp:/app/src/tmp"
+      - "${PWD-.}/images:/app/src/images"
+      - "${PWD-.}/tmp:/app/src/tmp"
+      - "${PWD-.}/authorized:/app/src/authorized"
     environment:
-      DEBUG: true
+      # DEBUG: true
       DATABASE_HOST: db
       DATABASE_URL: postgres://odoo:odoo@db:5432/vsk
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/%2F
-      SHOW: true
+      # SHOW: true
       LIMIT: 300
+      AUTHORIZED_PATH: authorized.json
     depends_on:
       - db
       - rabbitmq
     networks:
-      - label_studio_network
+      - mind-core
 
 
 volumes:
   db-data:
   rabbitmq-db:
 
+
 networks:
-  label_studio_network:
+  mind-core:

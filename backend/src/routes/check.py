@@ -32,7 +32,7 @@ async def get_checks_or_404(id: str) -> Checks:
 
 
 @check_router.get(
-    "/",
+    "",
     response_model=List[CheckPublic],
     dependencies=[Depends(api_token)],
 )
