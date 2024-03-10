@@ -3,5 +3,5 @@ gunicorn==20.1.0
 itsdangerous==2.0.1
 label-studio-ml @ git+https://github.com/HumanSignal/label-studio-ml-backend.git
 rq==1.10.1
-werkzeug==2.0.2
+werkzeug
 requests
