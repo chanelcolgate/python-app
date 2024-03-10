@@ -8,6 +8,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 RUN apt-get update
+RUN apt-get install --assume-yes git
 RUN --mount=type=cache,target=$PIP_CACHE_DIR \
     pip3 install -r requirements.txt
 
