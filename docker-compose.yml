@@ -41,7 +41,8 @@ services:
       - label_studio_network
 
   server:
-    image: chanelcolgate/labelstudioml:3cac81738ebae8afeb2616e1f3a3d9a1e767cbf5
+    # image: chanelcolgate/labelstudioml:3cac81738ebae8afeb2616e1f3a3d9a1e767cbf5
+    image: chanelcolgate/labelstudioml:f1dfbfa23eb91c846393bed9d4f56b95db851c85
     environment:
       - RQ_QUEUE_NAME=default
       - REDIS_HOST=redis
