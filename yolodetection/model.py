@@ -63,3 +63,7 @@ class Yolov8(LabelStudioMLBase):
             all_scores.append(score)
         avg_score = sum(all_scores) / max(len(all_scores), 1)
         return [{"result": results, "score": avg_score}]
+
+    def fit(self, completions, workdir=None, **kwargs):
+        logging.info(completions)
+        return {"success": "ok"}
