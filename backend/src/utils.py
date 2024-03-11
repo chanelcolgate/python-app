@@ -207,19 +207,39 @@ def read_and_write_url(image_url):
         image.save(filename)
         return filename
     except requests.exceptions.RequestException as e:
-        # raise ValueError(f"Error reading image from URL: {e}")
-        raise HTTPException(400, f"Error reading image from URL: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=[
+                {
+                    "type": "string_type",
+                    "loc": ["body", "image"],
+                    "msg": f"Error reading image from URL: {e}",
+                    "input": image_url,
+                    "url": "https://errors.pydantic.dev/2.5/v/string_type",
+                }
+            ],
+        )
     except Exception as e:
-        # raise ValueError(f"Error writing image to {filename}: {e}")
-        raise HTTPException(400, f"Error writing image to {filename}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=[
+                {
+                    "type": "string_type",
+                    "loc": ["body", "image"],
+                    "msg": f"Error writing image to {filename}: {e}",
+                    "input": image_url,
+                    "url": "https://errors.pydantic.dev/2.5/v/string_type",
+                }
+            ],
+        )
 
 
 def read_and_write_base64(image_b64):
-    decoded = base64.b64decode(image_b64)
-    h = hashlib.sha1()
-    h.update(decoded)
-    filename = f"{h.hexdigest()}.jpg"
     try:
+        decoded = base64.b64decode(image_b64)
+        h = hashlib.sha1()
+        h.update(decoded)
+        filename = f"{h.hexdigest()}.jpg"
         # Open the image using PIL
         image = Image.open(BytesIO(decoded))
         image = image.convert("RGB")
@@ -231,5 +251,15 @@ def read_and_write_base64(image_b64):
         image.save(filename)
         return filename
     except Exception as e:
-        # raise ValueError(f"Error writing image to {filename}: {e}")
-        raise HTTPException(400, f"Error writing image to {filename}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=[
+                {
+                    "type": "string_type",
+                    "loc": ["body", "image"],
+                    "msg": f"Error writing image to filename: {e}",
+                    "input": image_b64,
+                    "url": "https://errors.pydantic.dev/2.5/v/string_type",
+                }
+            ],
+        )

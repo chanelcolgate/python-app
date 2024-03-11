@@ -42,7 +42,7 @@ services:
 
   server:
     # image: chanelcolgate/labelstudioml:3cac81738ebae8afeb2616e1f3a3d9a1e767cbf5
-    image: chanelcolgate/labelstudioml:f1dfbfa23eb91c846393bed9d4f56b95db851c85
+    image: chanelcolgate/labelstudioml:542550389a8bfe3d04f98cdc69d26298894f4dac
     environment:
       - RQ_QUEUE_NAME=default
       - REDIS_HOST=redis
@@ -54,6 +54,17 @@ services:
     volumes:
       - "./logs:/tmp"
       - "./data/media:/data"
+    networks:
+      - label_studio_network
+
+  model_server:
+    build: ./the_simplest_backend
+    image: chanelcolgate/the_simplest_backend:v0
+    ports:
+      - 9094:9090
+    volumes:
+      - "./data/media:/data"
+      - "./roboflow:/tmp"
     networks:
       - label_studio_network
 
