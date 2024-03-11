@@ -11,8 +11,8 @@ services:
 
   bentoml:
     #image: chanelcolgate/yolo_v8_demo:fzdi6u6wc2awarek
-    image: yolo_v8_demo:tspvntwxbw2birek
-    hostname: bentoml
+    # image: yolo_v8_demo:tspvntwxbw2birek
+    image: yolo_v8_demo:i6kbkuoxostnirek
     # command: > 
     #   bash -c "
     #   if [ ! -d '/tmp/images' ]; then
@@ -20,7 +20,7 @@ services:
     #   fi"
     # command: sh -c "test -d /tmp/images || mkdir /tmp/images"
     ports:
-      - "3000:3000"
+      - "3000"
     environment:
       - HF_MODEL_ID=linhcuem/checker_TB_yolov8_ver2
       - MODEL_CONF=0.5
@@ -32,7 +32,6 @@ services:
 
   redis:
     image: redis:alpine
-    hostname: redis
     volumes:
       - "./data/redis:/data"
     expose:
