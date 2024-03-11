@@ -20,6 +20,16 @@ from src.models.check import CheckPublic
 from src.models.image_display import Checks, ImageUpdate, State, Images
 
 
+class KhanhException(HTTPException):
+    def __init__(
+        self, status_code: int, detail: str, result: str, headers=None
+    ):
+        self.result = result
+        super().__init__(
+            status_code=status_code, detail=detail, headers=headers
+        )
+
+
 async def api_token(token: str = Depends(APIKeyHeader(name="api-key"))):
     if token not in settings.API_KEY.get("api_key"):
         raise HTTPException(
