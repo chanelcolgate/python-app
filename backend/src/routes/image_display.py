@@ -25,7 +25,7 @@ from src.models.image_display import (
 )
 from src.models.check import CheckPublic
 from src.settings import settings
-from src.utils import api_token, KhanhException
+from src.utils import api_token
 from src.rabbitmq.connection import connection, channel, exchange
 from src.utils import detect_objects, read_and_write_url, read_and_write_base64
 
@@ -136,16 +136,10 @@ from starlette.responses import JSONResponse, Response
 )
 async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
     body_json = body.dict(exclude_unset=True)
-    try:
-        if body_json["image"].startswith(("https://", "http://")):
-            main_image_path = read_and_write_url(body_json["image"])
-        else:
-            main_image_path = read_and_write_base64(body_json["image"])
-    except KhanhException as exc:
-        return JSONResponse(
-            {"detail": exc.detail, "result": exc.result},
-            status_code=exc.status_code,
-        )
+    if body_json["image"].startswith(("https://", "http://")):
+        main_image_path = read_and_write_url(body_json["image"])
+    else:
+        main_image_path = read_and_write_base64(body_json["image"])
 
     results = await execute_query(
         latitude=body_json["location"]["latitude"],
@@ -177,7 +171,7 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
     try:
         checks = await Checks.get(id=body_json["program_id"].split("_")[0])
     except DoesNotExist:
-        raise KhanhException(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Checks {body_json['program_id']} does not exist",
             result="fail",

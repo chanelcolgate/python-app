@@ -49,7 +49,6 @@ class Settings(BaseSettings):
             cls.API_KEY = df.to_dict("list")
             return path
         except Exception:
-            logging.info("a")
             return ""
 
 
