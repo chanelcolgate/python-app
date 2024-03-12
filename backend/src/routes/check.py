@@ -18,7 +18,7 @@ import numpy as np
 from src.models.check import CheckPublic, CheckCreate, CheckUpdate
 from src.models.image_display import Checks
 from src.settings import settings
-from src.utils import api_token
+from src.utils import api_token, KhanhException
 
 check_router = APIRouter(tags=["Check"])
 
@@ -28,7 +28,9 @@ async def get_checks_or_404(id: str) -> Checks:
         checks = await Checks.get(id=id)
         return checks
     except DoesNotExist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise KhanhException(
+            status_code=status.HTTP_404_NOT_FOUND, result="fail"
+        )
 
 
 # @check_router.get(
@@ -66,9 +68,10 @@ async def upload_file(file: UploadFile = File(...)) -> list:
     # Check if the uploaded file is an Excel file
     if not file.filename.endswith(".xlsx"):
         # return {"error": "Only Excel file (.xlsx) are supported"}
-        raise HTTPException(
+        raise KhanhException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="Only Excel file (.xlsx) are supported",
+            result="fail",
         )
 
     # Read the Excel file
@@ -118,8 +121,9 @@ async def delete_checks(id: str) -> dict:
     try:
         checks = await Checks.filter(id=id).delete()
     except DoesNotExist:
-        raise HTTPException(
+        raise KhanhException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Checks {id} does not exist",
+            result="fail",
         )
     return {"message": "Deleted images filtered with id"}

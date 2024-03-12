@@ -32,9 +32,10 @@ class KhanhException(HTTPException):
 
 async def api_token(token: str = Depends(APIKeyHeader(name="api-key"))):
     if token not in settings.API_KEY.get("api_key"):
-        raise HTTPException(
+        raise KhanhException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
+            result="fail",
         )
 
 
@@ -217,7 +218,7 @@ def read_and_write_url(image_url):
         image.save(filename)
         return filename
     except requests.exceptions.RequestException as e:
-        raise HTTPException(
+        raise KhanhException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=[
                 {
@@ -228,9 +229,10 @@ def read_and_write_url(image_url):
                     "url": "https://errors.pydantic.dev/2.5/v/string_type",
                 }
             ],
+            result="fail",
         )
     except Exception as e:
-        raise HTTPException(
+        raise KhanhException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=[
                 {
@@ -241,6 +243,7 @@ def read_and_write_url(image_url):
                     "url": "https://errors.pydantic.dev/2.5/v/string_type",
                 }
             ],
+            result="fail",
         )
 
 
@@ -261,7 +264,7 @@ def read_and_write_base64(image_b64):
         image.save(filename)
         return filename
     except Exception as e:
-        raise HTTPException(
+        raise KhanhException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=[
                 {
@@ -272,4 +275,5 @@ def read_and_write_base64(image_b64):
                     "url": "https://errors.pydantic.dev/2.5/v/string_type",
                 }
             ],
+            result="fail",
         )

@@ -177,9 +177,10 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
     try:
         checks = await Checks.get(id=body_json["program_id"].split("_")[0])
     except DoesNotExist:
-        raise HTTPException(
+        raise KhanhException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Checks {body_json['program_id']} does not exist",
+            result="fail",
         )
     image_obj = await Images.create(
         image=main_image_path,
@@ -282,12 +283,16 @@ async def delete_images(program_id: str) -> dict:
         await Checks.get(id=program_id)
         images = await Images.filter(program__id=program_id)
         for image in images:
-            os.unlink(os.path.abspath(image.image))
+            try:
+                os.unlink(os.path.abspath(image.image))
+            except Exception:
+                pass
             # os.unlink(os.path.abspath(image.image_result))
             await image.delete()
     except DoesNotExist:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Checks {program_id} does not exist",
+            result="fail",
         )
     return {"message": f"Deleted images filtered with {program_id}"}
