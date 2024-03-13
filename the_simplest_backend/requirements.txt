@@ -3,5 +3,5 @@ label-studio-sdk>=0.0.21
 label-studio-ml @ git+https://github.com/chanelcolgate/label-studio-ml-backend.git
 Pillow
 requests
-ultralyticsplus==0.1.0
+ultralyticsplus @ git+https://github.com/chanelcolgate/ultralyticsplus.git
 ultralytics==8.0.239

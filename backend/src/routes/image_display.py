@@ -138,6 +138,11 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
     body_json = body.dict(exclude_unset=True)
     if body_json["image"].startswith(("https://", "http://")):
         main_image_path = read_and_write_url(body_json["image"])
+    # ftp://mind@10.17.4.14/_G0600060_1705549132152.jpg
+    elif body_json["image"].startswith("ftp://"):
+        image_ftp_name = body_json["image"].split("/")[-1]
+        image_ftp = f"{settings.FTP_URL}/{image_ftp_name}"
+        main_image_path = read_and_write_url(image_ftp)
     else:
         main_image_path = read_and_write_base64(body_json["image"])
 

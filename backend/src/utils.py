@@ -40,7 +40,7 @@ async def detect_objects(image_id, body) -> dict:
     response_queue = rabbitpy.Queue(
         channel,
         queue_name,
-        auto_delete=False,
+        auto_delete=True,
         durable=False,
     )
 
@@ -59,8 +59,12 @@ async def detect_objects(image_id, body) -> dict:
     program_id = body["program_id"].split("_")[0]
     number = int(body["program_id"].split("_")[1])
     image_url = body["image"]
-    if not image_url[:8].startswith(("https://", "http://")):
+    if not image_url[:8].startswith(("https://", "http://", "ftp://")):
         temp_file = utils.read_and_write_base64(image_url)
+    elif image_url[:8].startswith("ftp://"):
+        image_ftp_name = body["image"].split("/")[-1]
+        image_ftp = f"{settings.FTP_URL}/{image_ftp_name}"
+        temp_file = utils.read_and_write_url(image_ftp)
     else:
         temp_file = utils.read_and_write_url(image_url)
 

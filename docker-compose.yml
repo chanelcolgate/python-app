@@ -2,6 +2,7 @@ version: "3.8"
 services:
   label_studio:
     image: heartexlabs/label-studio:latest
+    user: root
     ports:
       - 8508:8080
     volumes:
@@ -10,9 +11,7 @@ services:
       - label_studio_network
 
   bentoml:
-    #image: chanelcolgate/yolo_v8_demo:fzdi6u6wc2awarek
-    # image: yolo_v8_demo:tspvntwxbw2birek
-    image: yolo_v8_demo:i6kbkuoxostnirek
+    image: chanelcolgate/yolo_v8_demo:i6kbkuoxostnirek
     # command: > 
     #   bash -c "
     #   if [ ! -d '/tmp/images' ]; then
@@ -61,11 +60,26 @@ services:
     image: chanelcolgate/the_simplest_backend:v0
     ports:
       - 9094:9090
+    environment:
+      - LABEL_STUDIO_HOST=
+      - LABEL_STUDIO_API_KEY=
+      - HF_MODEL_ID=
+      - HF_MODEL_ID_2=
+      - HF_DATASET_ID=
+      - BENTOML_UDRL=
     volumes:
       - "./data/media:/data"
       - "./roboflow:/tmp"
     networks:
       - label_studio_network
+    # shm_size: "12g"
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #       - driver: nvidia
+    #         device_ids: ['0']
+    #         capabilities: [gpu]
 
   db:
     image: postgres:13
@@ -153,6 +167,7 @@ services:
       DATABASE_HOST: db
       DATABASE_URL: postgres://odoo:odoo@db:5432/vsk
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/%2F
+      FTP_URL: http://49.156.55.124/raw
       SHOW: true
       LIMIT: 300
     depends_on:
@@ -177,3 +192,4 @@ volumes:
 
 networks:
   label_studio_network:
+

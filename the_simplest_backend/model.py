@@ -17,6 +17,11 @@ LABEL_STUDIO_HOST = os.getenv("LABEL_STUDIO_HOST", "http://label_studio:8080")
 LABEL_STUDIO_API_KEY = os.getenv(
     "LABEL_STUDIO_API_KEY", "ac5d1460f85bc9edd228ebbf08c6cf46f2361805"
 )
+HF_TOKEN = os.getenv("HF_TOKEN", "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")
+HF_MODEL_ID = os.getenv("HF_MODEL_ID", "linhcuem/checker_TB_yolov8_ver2")
+HF_MODEL_ID_2 = os.getenv("HF_MODEL_ID_2", "chanelcolgate/chamdiemgianhang-test")
+HF_DATASET_ID = os.getenv("HF_DATASET_ID", "chanelcolgate/yenthienviet")
+BENTOML_URL = os.getenv("BENTOML_URL", "http://bentoml:3000/annotation")
 
 
 def convert_xyxy(x, y, width, height, img_width, img_height):
@@ -122,8 +127,7 @@ class MyModel(LabelStudioMLBase):
             self.value,
             self.labels_in_config,
         ) = get_single_tag_keys(self.parsed_label_config, "RectangleLabels", "Image")
-        hf_model_id = os.getenv("HF_MODEL_ID", "linhcuem/checker_TB_yolov8_ver2")
-        model_path = download_from_hub(hf_model_id)
+        model_path = download_from_hub(HF_MODEL_ID)
         self.model = YOLO(model_path)
 
         # Path to the YAML file
@@ -197,24 +201,23 @@ class MyModel(LabelStudioMLBase):
             ## Training Data
             print("training started")
             self.model.train(data="/tmp/data.yaml", epochs=2)
-            hf_token = "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"
-            if hf_token is None:
+            if HF_TOKEN is None:
                 raise ValueError(
                     "Please set HF_TOKEN environment variable to your HuggingFace token."
                 )
             print("push to hub started")
             try:
                 push_to_hfhub(
-                    hf_model_id="chanelcolgate/chamdiemgianhang-test",
+                    hf_model_id=HF_MODEL_ID_2,
                     exp_dir="runs/detect/train",
-                    hf_token=hf_token,
+                    hf_token=HF_TOKEN,
                     hf_private=False,
-                    hf_dataset_id="chanelcolgate/yenthienviet",
+                    hf_dataset_id=HF_DATASET_ID,
                     thumbnail_text="YOLOv8s Cham diem gian hang Detection",
                 )
                 print("push to hub succeeded")
             except HfHubHTTPError as e:
                 print("push to hub failed")
                 print(e)
-
-        print("error")
+        else:
+            print("error")

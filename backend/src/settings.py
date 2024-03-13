@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     LIMIT: int = 300
     BENTOML_URL: str = "http://localhost:3000/render"
     # API_KEY: Dict[str, Any] = {}
+    FTP_URL: str = "http://49.156.55.124/raw"
 
     AUTHORIZED_PATH: str = "authorized.json"
 
