@@ -63,6 +63,7 @@ services:
     environment:
       - LABEL_STUDIO_HOST=
       - LABEL_STUDIO_API_KEY=
+      - HF_TOKEN=
       - HF_MODEL_ID=
       - HF_MODEL_ID_2=
       - HF_DATASET_ID=
