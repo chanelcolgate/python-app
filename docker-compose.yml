@@ -67,7 +67,7 @@ services:
       - HF_MODEL_ID=
       - HF_MODEL_ID_2=
       - HF_DATASET_ID=
-      - BENTOML_UDRL=
+      - BENTOML_URL=
     volumes:
       - "./data/media:/data"
       - "./roboflow:/tmp"

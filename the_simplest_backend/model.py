@@ -78,7 +78,7 @@ def load_data(data, label2id):
             bbox=bbox, image_width=image_width, image_height=image_height
         )
         x_center.append(bbox[0])
-        x_center.aapned(bbox[1])
+        y_center.append(bbox[1])
         width.append(bbox[2])
         height.append(bbox[3])
         classes.append(label2id[sample["value"]["rectanglelabels"][0]])
