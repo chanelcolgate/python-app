@@ -25,7 +25,7 @@ from src.models.image_display import (
 )
 from src.models.check import CheckPublic
 from src.settings import settings
-from src.utils import api_token
+from src.utils import api_token, timed_execution, timed_execution_async
 from src.rabbitmq.connection import connection, channel, exchange
 from src.utils import detect_objects, read_and_write_url, read_and_write_base64
 
@@ -33,6 +33,7 @@ image_display_router = APIRouter(tags=["Image Display"])
 
 
 # Function to execute the raw SQL query
+@timed_execution_async
 async def execute_query(latitude, longitude, program_id, limit):
     sql_query = f"""
         WITH distance AS (
@@ -60,47 +61,50 @@ async def execute_query(latitude, longitude, program_id, limit):
     return result
 
 
-# @image_display_router.post("/duplicate-image")
-# async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
-#     body_json = body.dict(exclude_unset=True)
-#     main_image_path = read_and_write_url(body_json["image"])
-#     results = await execute_query(
-#         latitude=body_json["location"]["latitude"],
-#         longitude=body_json["location"]["longitude"],
-#         limit=300,
-#     )
-#     for result in results:
-#         main_image = cv2.imread(os.path.abspath(main_image_path))
-#         gray_main_image = cv2.cvtColor(main_image, cv2.COLOR_BGR2GRAY)
-#
-#         template = cv2.imread(os.path.abspath(result["image"]), 0)
-#         res = cv2.matchTemplate(gray_main_image, template, cv2.TM_CCOEFF_NORMED)
-#         conf = round(res.max() * 100, 2)
-#         if conf > 90:
-#             return {
-#                 "result": "Trùng",
-#                 "image": body_json["image"],
-#                 "program_id": body_json["program_id"],
-#             }
-#
-#     try:
-#         checks = await Checks.get(id=body_json["program_id"])
-#     except DoesNotExist:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail=f"Checks {body_json['program_id']} does not exist",
-#         )
-#     await Images.create(
-#         image=main_image_path,
-#         latitude=body_json["location"]["latitude"],
-#         longitude=body_json["location"]["longitude"],
-#         program=checks,
-#     )
-#     return {
-#         "result": "Không trùng",
-#         "image": body_json["image"],
-#         "program_id": body_json["program_id"],
-#     }
+@image_display_router.post("/duplicate-image")
+async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
+    body_json = body.dict(exclude_unset=True)
+    if body_json["image"].startswith(("https://", "http://")):
+        main_image_path = read_and_write_url(body_json["image"])
+    # ftp://mind@10.17.4.14/_G0600060_1705549132152.jpg
+    elif body_json["image"].startswith("ftp://"):
+        image_ftp_name = body_json["image"].split("/")[-1]
+        image_ftp = f"{settings.FTP_URL}/{image_ftp_name}"
+        main_image_path = read_and_write_url(image_ftp)
+    else:
+        main_image_path = read_and_write_base64(body_json["image"])
+
+    results = await execute_query(
+        latitude=body_json["location"]["latitude"],
+        longitude=body_json["location"]["longitude"],
+        program_id=body_json["program_id"].split("_")[0],
+        limit=settings.LIMIT,
+    )
+    for result in results:
+        template = cv2.imread(os.path.abspath(result["image"]), 0)
+
+        main_image = cv2.imread(os.path.abspath(main_image_path))
+        gray_main_image = cv2.cvtColor(main_image, cv2.COLOR_BGR2GRAY)
+
+        try:
+            res = cv2.matchTemplate(
+                gray_main_image, template, cv2.TM_CCOEFF_NORMED
+            )
+        except Exception:
+            res = numpy.array([[0]])
+
+        conf = round(res.max() * 100, 2)
+        if conf > 90:
+            return {
+                "result": "duplicated",
+                "image": body_json["image"],
+                "program_id": body_json["program_id"],
+            }
+    return {
+        "result": "no duplicated",
+        "image": body_json["image"],
+        "program_id": body_json["program_id"],
+    }
 
 
 # @image_display_router.post(

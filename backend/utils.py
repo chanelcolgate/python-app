@@ -3,12 +3,49 @@ import imghdr
 import os
 import platform
 import base64
+import time
+import asyncio
 from io import BytesIO
+from functools import wraps
 
 import requests
 from PIL import Image
 
 
+def timed_execution(func):
+    @wraps(func)
+    def timed_execute(*args, **kwargs):
+        start_time = time.process_time()
+        result = func(*args, **kwargs)
+        end_time = time.process_time()
+        run_time = end_time - start_time
+        print(f"'{func.__name__}' took {run_time * 1000:.2f} ms")
+        return result
+
+    return timed_execute
+
+
+def timed_execution_async(func):
+    async def wrapper(*args, **kwargs):
+        t = 0
+        coro = func(*args, **kwargs)
+        try:
+            while True:
+                t0 = time.perf_counter()
+                future = coro.send(None)
+                t1 = time.perf_counter()
+                t += t1 - t0
+                while not future.done():
+                    await asyncio.sleep(0)
+                future.result()
+        except StopIteration as e:
+            print(f"'{func.__name__}' took {t * 1000:.2f} ms")
+            return e.value
+
+    return wrapper
+
+
+@timed_execution
 def mime_types(filename):
     """Return the mime_type of the file
 
@@ -19,6 +56,7 @@ def mime_types(filename):
     return f"image/{imghdr.what(filename)}"
 
 
+@timed_execution
 def read_image(filename):
     """Read in the file from path and return the opaque binary data
 
@@ -28,6 +66,7 @@ def read_image(filename):
         return handle.read()
 
 
+@timed_execution
 def read_and_write_url(image_url):
     h = hashlib.sha1()
     h.update(image_url.encode("utf-8"))
@@ -58,6 +97,7 @@ def read_and_write_url(image_url):
         raise ValueError(f"Error writing image to {filename}: {e}")
 
 
+@timed_execution
 def read_and_write_base64(image_b64):
     decoded = base64.b64decode(image_b64)
     h = hashlib.sha1()
@@ -82,6 +122,7 @@ def read_and_write_base64(image_b64):
         raise ValueError(f"Error writing image to {filename}: {e}")
 
 
+@timed_execution
 def write_temp_file(obd, mime_type):
     """Write out the binary data passed in to a temporary file,
     using the mime type to determine the file extension.

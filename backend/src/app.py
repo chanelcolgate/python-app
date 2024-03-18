@@ -27,9 +27,9 @@ app.add_middleware(
 )
 
 # Register routes
-app.include_router(auth_router, prefix="/api/auth")
-app.include_router(check_router, prefix="/api/check")
-app.include_router(image_display_router, prefix="/api/image-display")
+app.include_router(auth_router, prefix="/api/v1/auth")
+app.include_router(check_router, prefix="/api/v1/check")
+app.include_router(image_display_router, prefix="/api/v1/image-display")
 
 
 # @app.get("/")

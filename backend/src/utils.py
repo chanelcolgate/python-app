@@ -5,8 +5,10 @@ import hashlib
 import imghdr
 import platform
 import base64
+import asyncio
 from io import BytesIO
 from typing import Optional
+from functools import wraps
 
 import rabbitpy
 import requests
@@ -20,6 +22,39 @@ from src.models.check import CheckPublic
 from src.models.image_display import Checks, ImageUpdate, State, Images
 
 
+def timed_execution(func):
+    @wraps(func)
+    def timed_execute(*args, **kwargs):
+        start_time = time.process_time()
+        result = func(*args, **kwargs)
+        end_time = time.process_time()
+        run_time = end_time - start_time
+        print(f"'{func.__name__}' took {run_time * 1000:.2f} ms")
+        return result
+
+    return timed_execute
+
+
+def timed_execution_async(func):
+    async def wrapper(*args, **kwargs):
+        t = 0
+        coro = func(*args, **kwargs)
+        try:
+            while True:
+                t0 = time.perf_counter()
+                future = coro.send(None)
+                t1 = time.perf_counter()
+                t += t1 - t0
+                while not future.done():
+                    await asyncio.sleep(0)
+                future.result()
+        except StopIteration as e:
+            print(f"'{func.__name__}' took {t * 1000:.2f} ms")
+            return e.value
+
+    return wrapper
+
+
 async def api_token(token: str = Depends(APIKeyHeader(name="api-key"))):
     if token not in settings.API_KEY.get("api_key"):
         raise HTTPException(
@@ -29,6 +64,7 @@ async def api_token(token: str = Depends(APIKeyHeader(name="api-key"))):
         )
 
 
+@timed_execution_async
 async def detect_objects(image_id, body) -> dict:
     connection = rabbitpy.Connection(settings.RABBITMQ_URL)
     channel = connection.channel()
@@ -192,6 +228,7 @@ async def detect_objects(image_id, body) -> dict:
     # }
 
 
+@timed_execution
 def read_and_write_url(image_url):
     h = hashlib.sha1()
     h.update(image_url.encode("utf-8"))
@@ -241,6 +278,7 @@ def read_and_write_url(image_url):
         )
 
 
+@timed_execution
 def read_and_write_base64(image_b64):
     try:
         decoded = base64.b64decode(image_b64)
