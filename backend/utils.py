@@ -45,7 +45,7 @@ def timed_execution_async(func):
     return wrapper
 
 
-@timed_execution
+# @timed_execution
 def mime_types(filename):
     """Return the mime_type of the file
 
@@ -56,7 +56,7 @@ def mime_types(filename):
     return f"image/{imghdr.what(filename)}"
 
 
-@timed_execution
+# @timed_execution
 def read_image(filename):
     """Read in the file from path and return the opaque binary data
 
@@ -66,7 +66,7 @@ def read_image(filename):
         return handle.read()
 
 
-@timed_execution
+# @timed_execution
 def read_and_write_url(image_url):
     h = hashlib.sha1()
     h.update(image_url.encode("utf-8"))
@@ -97,7 +97,7 @@ def read_and_write_url(image_url):
         raise ValueError(f"Error writing image to {filename}: {e}")
 
 
-@timed_execution
+# @timed_execution
 def read_and_write_base64(image_b64):
     decoded = base64.b64decode(image_b64)
     h = hashlib.sha1()
@@ -122,7 +122,7 @@ def read_and_write_base64(image_b64):
         raise ValueError(f"Error writing image to {filename}: {e}")
 
 
-@timed_execution
+# @timed_execution
 def write_temp_file(obd, mime_type):
     """Write out the binary data passed in to a temporary file,
     using the mime type to determine the file extension.

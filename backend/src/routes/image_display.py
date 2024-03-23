@@ -33,7 +33,7 @@ image_display_router = APIRouter(tags=["Image Display"])
 
 
 # Function to execute the raw SQL query
-@timed_execution_async
+# @timed_execution_async
 async def execute_query(latitude, longitude, program_id, limit):
     sql_query = f"""
         WITH distance AS (
@@ -43,7 +43,7 @@ async def execute_query(latitude, longitude, program_id, limit):
                 (((acos(sin(({latitude} * pi() / 180)) * sin(((latitude)::real * pi() / 180)) + cos(({latitude}* pi() / 180)) * cos(((latitude)::real * pi() / 180)) * cos((({longitude} - (longitude)::real) * pi() / 180)))) * 180 / pi()) * 60 * 1.1515 * 1.609344) * 1000 AS distance
             FROM
                 images
-            WHERE program_id = '{program_id}'
+            WHERE program_id = '{program_id}' and pass_fail = 'pass'
         )
         SELECT
             image

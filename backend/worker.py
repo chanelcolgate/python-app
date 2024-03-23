@@ -19,11 +19,7 @@ channel.prefetch_count(10)
 # Create the worker queue
 queue_name = f"rpc-worker-{os.getpid()}"
 queue = rabbitpy.Queue(
-    channel,
-    queue_name,
-    auto_delete=True,
-    durable=False,
-    exclusive=True
+    channel, queue_name, auto_delete=True, durable=False, exclusive=True
 )
 
 # Declare the worker queue
@@ -31,7 +27,7 @@ if queue.declare():
     print("Worker queue declared")
 
 # Bind the worker queue
-if queue.bind("direct-rpc-requests", "detect-objects"):
+if queue.bind("rpc-requests", "10"):
     print("Worker queue bound")
 
 unacknowledged = 0

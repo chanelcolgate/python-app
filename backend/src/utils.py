@@ -64,7 +64,7 @@ async def api_token(token: str = Depends(APIKeyHeader(name="api-key"))):
         )
 
 
-@timed_execution_async
+# @timed_execution_async
 async def detect_objects(image_id, body) -> dict:
     connection = rabbitpy.Connection(settings.RABBITMQ_URL)
     channel = connection.channel()
@@ -107,15 +107,23 @@ async def detect_objects(image_id, body) -> dict:
     if settings.DEBUG:
         print(f"Sending request for image: {image_url}")
 
+    hash_value = hashlib.md5(image_url.encode())
+    properties = {
+        "app_id": "Publisher",
+        "content_type": utils.mime_types(temp_file),
+        "reply_to": queue_name,
+        "headers": {"image_hash": str(hash_value.hexdigest())},
+    }
+
     message = rabbitpy.Message(
         channel,
         utils.read_image(temp_file),
-        {"content_type": utils.mime_types(temp_file), "reply_to": queue_name},
+        properties,
         opinionated=True,
     )
 
     # Publish
-    message.publish("direct-rpc-requests", "detect-objects")
+    message.publish("rpc-requests")
 
     # Loop util there is a response message
     message = None
@@ -228,7 +236,7 @@ async def detect_objects(image_id, body) -> dict:
     # }
 
 
-@timed_execution
+# @timed_execution
 def read_and_write_url(image_url):
     h = hashlib.sha1()
     h.update(image_url.encode("utf-8"))
@@ -278,7 +286,7 @@ def read_and_write_url(image_url):
         )
 
 
-@timed_execution
+# @timed_execution
 def read_and_write_base64(image_b64):
     try:
         decoded = base64.b64decode(image_b64)
