@@ -2,6 +2,7 @@ import os
 import rabbitpy
 import time
 import json
+import uuid
 from datetime import datetime
 
 import utils
@@ -17,7 +18,7 @@ channel = connection.channel()
 channel.prefetch_count(10)
 
 # Create the worker queue
-queue_name = f"rpc-worker-{os.getpid()}"
+queue_name = f"rpc-worker-{uuid.uuid4()}"
 queue = rabbitpy.Queue(
     channel, queue_name, auto_delete=True, durable=False, exclusive=True
 )
