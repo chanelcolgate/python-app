@@ -6,6 +6,7 @@ import imghdr
 import platform
 import base64
 import asyncio
+import uuid
 from io import BytesIO
 from typing import Optional
 from functools import wraps
@@ -72,7 +73,8 @@ async def detect_objects(image_id, body) -> dict:
     exchange = rabbitpy.DirectExchange(channel, "rpc-replies")
     exchange.declare()
 
-    queue_name = f"response-queue-{os.getpid()}"
+    # queue_name = f"response-queue-{os.getpid()}"
+    queue_name = f"response-queue-{uuid.uuid4()}"
     response_queue = rabbitpy.Queue(
         channel,
         queue_name,
@@ -112,7 +114,7 @@ async def detect_objects(image_id, body) -> dict:
         "app_id": "Publisher",
         "content_type": utils.mime_types(temp_file),
         "reply_to": queue_name,
-        "headers": {"image_hash": str(hash_value.hexdigest())},
+        "headers": {"image-hash": str(hash_value.hexdigest())},
     }
 
     message = rabbitpy.Message(
@@ -147,6 +149,8 @@ async def detect_objects(image_id, body) -> dict:
         # Display the result
         print(json.loads(message.body), message.properties["content_type"])
         print("RPC requets processed")
+
+    response_queue.delete()
 
     channel.close()
     connection.close()
