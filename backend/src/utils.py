@@ -95,7 +95,7 @@ async def detect_objects(image_id, body) -> dict:
     response_queue.bind("rpc-replies", queue_name)
 
     program_id = body["program_id"].split("_")[0]
-    number = int(body["program_id"].split("_")[1])
+    number = int(body["program_id"].split("_")[-1])
     image_url = body["image"]
     if not image_url[:8].startswith(("https://", "http://", "ftp://")):
         temp_file = utils.read_and_write_base64(image_url)
@@ -156,88 +156,71 @@ async def detect_objects(image_id, body) -> dict:
     connection.close()
 
     detection_dict, image_url = json.loads(message.body)
-    check = await Checks.get(id=program_id)
-    matrix_check = CheckPublic.from_orm(check).dict(exclude={"id", "name"})[
-        "matrix"
-    ]
 
-    result_dict = dict()
-    sum_check = 0
-    sum_matrix = 0
-    error_string = ""
-    reason = ""
-    for key, item in matrix_check.items():
-        sum_matrix += matrix_check[key]
-        if program_id == "LCLO":
-            sum_matrix -= 1
-        sum_matrix *= number
-        try:
-            if (matrix_check[key] * number) <= detection_dict[key]:
-                result_dict[key] = detection_dict[key]
-                sum_check += detection_dict[key]
-            else:
-                error_string += f"Không đủ {key}, "
-        except KeyError:
-            error_string += f"Không có {key}, "
+    # Code new #
+    check = await Checks.get(id=program_id)
+    check_dict = CheckPublic.from_orm(check).dict(exclude={"id", "name"})
+
+    matrix_check = check_dict["matrix"]
     image_result = "src/images/{}".format(image_url.split("/")[-1])
-    if sum_check >= sum_matrix:
-        image_update = ImageUpdate(
-            image_result=image_result, pass_fail=State.PASS
-        )
-        message = State.PASS
-        reason = ""
+
+    if check_dict["transform"]:
+        sum_check = 0
+        sum_matrix = check_dict["count_face"] * number
+        for key, item in matrix_check.items():
+            try:
+                sum_check += (
+                    int(matrix_check[key].split("*")[0][1:3])
+                    * detection_dict[key]
+                )
+            except KeyError:
+                pass
+        if sum_matrix > sum_check:
+            image_update = ImageUpdate(
+                image_result=image_result, pass_fail=State.FAIL
+            )
+            await Images.get(id=image_id).update(**image_update.dict())
+            return {
+                "result": State.FAIL,
+                "reason": "Không đủ",
+                "program_id": body["program_id"],
+                "image_url": image_url.split("/")[-1],
+            }
     else:
-        image_update = ImageUpdate(
-            image_result=image_result, pass_fail=State.FAIL
-        )
-        message = State.FAIL
-        reason += error_string
+        for key, item in matrix_check.items():
+            try:
+                if (
+                    int(matrix_check[key].split("*")[-1]) * number
+                ) > detection_dict[key]:
+                    image_update = ImageUpdate(
+                        image_result=image_result, pass_fail=State.FAIL
+                    )
+                    await Images.get(id=image_id).update(**image_update.dict())
+                    return {
+                        "result": State.FAIL,
+                        "resonse": "Không đủ",
+                        "program_id": body["program_id"],
+                        "image_url": image_url.split("/")[-1],
+                    }
+            except KeyError:
+                image_udpate = ImageUpdate(
+                    image_result=image_result, pass_fail=State.FAIL
+                )
+                await Images.get(id=image_id).update(**image_update.dict())
+                return {
+                    "result": State.FAIL,
+                    "resonse": f"Không có {key}",
+                    "program_id": body["program_id"],
+                    "image_url": image_url.split("/")[-1],
+                }
+    image_update = ImageUpdate(image_result=image_result, pass_fail=State.PASS)
     await Images.get(id=image_id).update(**image_update.dict())
     return {
-        "result": message,
-        "reason": reason.rstrip(", "),
+        "result": State.PASS,
+        "reason": "",
         "program_id": body["program_id"],
         "image_url": image_url.split("/")[-1],
     }
-    # matrix_check_list = [
-    #     CheckPublic.from_orm(check).dict(exclude={"name", "type_check"})
-    #     for check in checks
-    # ]
-
-    # result_dict = dict()
-    # message = ""
-    # reason = ""
-    # program_id = None
-    # for matrix_check in matrix_check_list:
-    #     sum_check = 0
-    #     sum_matrix = 0
-    #     error_string = ""
-    #     for key, item in matrix_check.items():
-    #         if key != "id":
-    #             sum_matrix += matrix_check[key]
-    #             try:
-    #                 if matrix_check[key] <= detection_dict[key]:
-    #                     result_dict[key] = detection_dict[key]
-    #                     sum_check += detection_dict[key]
-    #                 else:
-    #                     error_string += f"Not enough {key}, "
-    #             except KeyError:
-    #                 error_string += f"Don't have {key}, "
-    #     # error_string = error_string.rstrip(", ")
-    #     if sum_check >= sum_matrix:
-    #         message = "Pass"
-    #         program_id = matrix_check["id"]
-    #         reason = ""
-    #         break
-    #     else:
-    #         message = "Fail"
-    #         reason += error_string
-    # return {
-    #     "result": message,
-    #     "reason": reason.rstrip(", "),
-    #     "program_id": program_id,
-    #     "image_url": image_url.split("/")[-1],
-    # }
 
 
 # @timed_execution

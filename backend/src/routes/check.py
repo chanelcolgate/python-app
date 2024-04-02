@@ -1,4 +1,5 @@
 import io
+import re
 from typing import List, Any, Union, Dict, Optional
 
 from fastapi import (
@@ -19,6 +20,7 @@ from src.models.check import CheckPublic, CheckCreate, CheckUpdate
 from src.models.image_display import Checks
 from src.settings import settings
 from src.utils import api_token
+import src.excel as excel
 
 check_router = APIRouter(tags=["Check"])
 
@@ -78,17 +80,42 @@ async def upload_file(file: UploadFile = File(...)) -> list:
     try:
         content = await file.read()
         df = pd.read_excel(io.BytesIO(content))
+        headers = df.columns.tolist()
+        labels = [
+            i
+            for i in headers
+            if i
+            not in [
+                "Các loại Bộ TB",
+                "Ký hiệu bộ trưng bày (Mới)",
+                "Ký hiệu bộ trưng bày",
+                "Giải Thích Ký Hiệu",
+                "Tổng Face Min SU",
+            ]
+        ]
+
         data = []
+        prog_code_pattern = re.compile(r"(?P<a>[&$]\d{2})\*(?P<b>\d{2})")
         for index, row in df.iterrows():
             item = {}
-            item["id"] = row["Ký hiệu bộ trưng bày"]
-            item["name"] = row["Bộ trưng bày"]
-            item["matrix"] = {
-                key: value
-                for key, value in row.items()
-                if key not in ["Bộ trưng bày", "Ký hiệu bộ trưng bày"]
-                if not np.isnan(value)
-            }
+            prog_code_matches = row["Ký hiệu bộ trưng bày (Mới)"].split("_")
+            item["id"] = prog_code_matches[0]
+            item["name"] = row["Giải Thích Ký Hiệu"]
+            item["transform"] = True
+            if "&" in row["Ký hiệu bộ trưng bày (Mới)"]:
+                item["transform"] = False
+            item["count_face"] = row["Tổng Face Min SU"]
+            item["matrix"] = {}
+            for elem in prog_code_matches[1:]:
+                prog_code_match = prog_code_pattern.match(elem)
+                a = prog_code_match.group("a")
+                b = int(prog_code_match.group("b"))
+                if not np.isnan(row[labels[b]]):
+                    item["matrix"].update(
+                        {labels[b]: f"{a}*{row[labels[b]]:.0f}"}
+                    )
+                else:
+                    item["matrix"].update({labels[b]: f"{a}*0"})
             data.append(item)
         for elem in data:
             try:
@@ -96,7 +123,10 @@ async def upload_file(file: UploadFile = File(...)) -> list:
             except IntegrityError:
                 check = await get_checks_or_404(elem["id"])
                 check_update = CheckUpdate(
-                    name=elem["name"], matrix=elem["matrix"]
+                    name=elem["name"],
+                    transform=elem["transform"],
+                    count_face=elem["count_face"],
+                    matrix=elem["matrix"],
                 )
                 check.update_from_dict(check_update.dict(exclude_unset=True))
                 await check.save()

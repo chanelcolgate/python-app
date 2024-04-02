@@ -13,6 +13,8 @@ class Checks(models.Model):
 
     id = fields.CharField(max_length=8, pk=True)
     name = fields.CharField(max_length=32)
+    transform = fields.BooleanField()
+    count_face = fields.SmallIntField()
     matrix = fields.JSONField()
 
     class Meta:
@@ -22,6 +24,8 @@ class Checks(models.Model):
 class CheckBase(BaseModel):
     id: str
     name: str
+    transform: bool
+    count_face: int
     matrix: dict
 
     class Config:
@@ -32,9 +36,15 @@ class CheckCreate(CheckBase):
     class Config:
         json_schema_extra = {
             "example": {
-                "id": "HPLO",
-                "name": "Bộ hộp",
-                "matrix": {"hop_ytv": 4, "hop_vtg": 1, "hop_jn": 1},
+                "id": "HOPG",
+                "name": "Bộ Hộp GOLD",
+                "maxtrix": {
+                    "hop_jn": "&01*04",
+                    "hop_vtg": "&01*01",
+                    "hop_ytv": "&01*01",
+                },
+                "transform": False,
+                "count_face": 6,
             }
         }
 
@@ -78,7 +88,9 @@ class CheckPublic(CheckCreate):
 
 class CheckUpdate(BaseModel):
     name: Optional[str] = None
-    matrix: Optional[Dict[str, int]] = None
+    transform: Optional[bool] = None
+    count_face: Optional[int] = None
+    matrix: Optional[Dict[str, str]] = None
 
 
 class CheckDB(CheckPublic):

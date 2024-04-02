@@ -19,9 +19,10 @@ services:
     #   fi"
     # command: sh -c "test -d /tmp/images || mkdir /tmp/images"
     ports:
-      - "3000"
+      - "3000:3000"
     environment:
-      - HF_MODEL_ID=linhcuem/checker_TB_yolov8_ver2
+      # - HF_MODEL_ID=linhcuem/checker_TB_yolov8_ver2
+      - HF_MODEL_ID=chanelcolgate/chamdiemgianhang-vsk
       - MODEL_CONF=0.5
       - MODEL_IOU=0.45
     volumes:
@@ -108,6 +109,8 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.12-management
+    # restart: no
+    # command: "rabbitmq-plugins enable rabbitmq_consistent_hash_exchange"
     ports:
       - "5672:5672"
       - "15672:15672"
