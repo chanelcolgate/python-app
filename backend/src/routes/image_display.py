@@ -295,7 +295,7 @@ async def delete_images(program_id: str) -> dict:
     except DoesNotExist:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Chương trình {body_json['program_id']} không tồn tại",
+            detail=f"Chương trình {program_id} không tồn tại",
             result="fail",
         )
     return {"message": f"Các bức ảnh được chấm điểm với mã chương trình {program_id} đã bị xóa"}
