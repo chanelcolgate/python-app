@@ -203,7 +203,7 @@ async def detect_objects(image_id, body) -> dict:
                         "image_url": image_url.split("/")[-1],
                     }
             except KeyError:
-                image_udpate = ImageUpdate(
+                image_update = ImageUpdate(
                     image_result=image_result, pass_fail=State.FAIL
                 )
                 await Images.get(id=image_id).update(**image_update.dict())
