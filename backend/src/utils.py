@@ -198,7 +198,7 @@ async def detect_objects(image_id, body) -> dict:
                     await Images.get(id=image_id).update(**image_update.dict())
                     return {
                         "result": State.FAIL,
-                        "resonse": "Không đủ",
+                        "reason": "Không đủ",
                         "program_id": body["program_id"],
                         "image_url": image_url.split("/")[-1],
                     }
@@ -209,7 +209,7 @@ async def detect_objects(image_id, body) -> dict:
                 await Images.get(id=image_id).update(**image_update.dict())
                 return {
                     "result": State.FAIL,
-                    "resonse": f"Không có {key}",
+                    "reason": f"Không có {key}",
                     "program_id": body["program_id"],
                     "image_url": image_url.split("/")[-1],
                 }
