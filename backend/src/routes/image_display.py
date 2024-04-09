@@ -7,6 +7,8 @@ import cv2
 import numpy
 import requests
 import rabbitpy
+import imagehash
+from PIL import Image
 from fastapi import APIRouter, HTTPException, status, Query, Body, Depends
 from tortoise.exceptions import DoesNotExist
 from tortoise.contrib.fastapi import HTTPNotFoundError
@@ -25,7 +27,7 @@ from src.models.image_display import (
 )
 from src.models.check import CheckPublic
 from src.settings import settings
-from src.utils import api_token, timed_execution, timed_execution_async
+from src.utils import api_token, timed_execution, timed_execution_async, images_to_compare
 from src.rabbitmq.connection import connection, channel, exchange
 from src.utils import detect_objects, read_and_write_url, read_and_write_base64
 
@@ -60,6 +62,27 @@ async def execute_query(latitude, longitude, program_id, limit):
 
     return result
 
+# def images_to_compare(img1, img2, func):
+#     if func == imagehash.phash:
+#         img1 = Image.fromarray(img1)
+#         img2 = Image.fromarray(img2)
+#         hash1 = func(img1)
+#         hash2 = func(img2)
+#         return hash1 - hash2
+#     else:
+#         try:
+#             res = func(img1, img2, cv2.TM_CCOEFF_NORMED)
+#         except Exception:
+#             res = numpy.array([[0]])
+#         return round(res.max() * 100, 2)
+
+
+def images_to_compare_2(imfile1, imfile2, func):
+    img1, img2 = Image.open(imfile1), Image.open(imfile2)
+    hash1 = func(img1)
+    hash2 = func(img2)
+    return hash1 - hash2
+
 
 @image_display_router.post("/duplicate-image")
 async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
@@ -80,21 +103,64 @@ async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
         program_id=body_json["program_id"].split("_")[0],
         limit=settings.LIMIT,
     )
+    # main_image = cv2.imread(os.path.abspath(main_image_path))
+    # gray_main_image = cv2.cvtColor(main_image, cv2.COLOR_BGR2GRAY)
     for result in results:
-        template = cv2.imread(os.path.abspath(result["image"]), 0)
+        # template = cv2.imread(os.path.abspath(result["image"]), 0)
 
-        main_image = cv2.imread(os.path.abspath(main_image_path))
-        gray_main_image = cv2.cvtColor(main_image, cv2.COLOR_BGR2GRAY)
+        # try:
+        #     res = cv2.matchTemplate(
+        #         gray_main_image, template, cv2.TM_CCOEFF_NORMED
+        #     )
+        # except Exception:
+        #     res = numpy.array([[0]])
 
-        try:
-            res = cv2.matchTemplate(
-                gray_main_image, template, cv2.TM_CCOEFF_NORMED
-            )
-        except Exception:
-            res = numpy.array([[0]])
-
-        conf = round(res.max() * 100, 2)
-        if conf > 90:
+        # conf = round(res.max() * 100, 2)
+        # conf = images_to_compare(gray_main_image, template, cv2.matchTemplate)
+        # conf = images_to_compare(gray_main_image, template, imagehash.phash)
+        conf_a = images_to_compare_2(
+            os.path.abspath(main_image_path),
+            os.path.abspath(result["image"]),
+            imagehash.average_hash
+        )
+        # conf_p = images_to_compare_2(
+        #     os.path.abspath(main_image_path),
+        #     os.path.abspath(result["image"]),
+        #     imagehash.phash
+        # )
+        # conf_d = images_to_compare_2(
+        #     os.path.abspath(main_image_path),
+        #     os.path.abspath(result["image"]),
+        #     imagehash.dhash
+        # )
+        # conf_wh = images_to_compare_2(
+        #     os.path.abspath(main_image_path),
+        #     os.path.abspath(result["image"]),
+        #     imagehash.whash
+        # )
+        # conf_wd = images_to_compare_2(
+        #     os.path.abspath(main_image_path),
+        #     os.path.abspath(result["image"]),
+        #     lambda image: imagehash.whash(image, mode='db4')
+        # )
+        # conf_co = images_to_compare_2(
+        #     os.path.abspath(main_image_path),
+        #     os.path.abspath(result["image"]),
+        #     imagehash.colorhash
+        # )
+        # conf_cr = images_to_compare_2(
+        #     os.path.abspath(main_image_path),
+        #     os.path.abspath(result["image"]),
+        #     imagehash.crop_resistant_hash
+        # )
+        print("conf_a", conf_a)
+        # print("conf_p", conf_p)
+        # print("conf_d", conf_d)
+        # print("conf_wh", conf_wh)
+        # print("conf_wd", conf_wd)
+        # print("conf_co", conf_co)
+        # print("conf_cr", conf_cr)
+        if conf_a < 10:
             return {
                 "result": "duplicated",
                 "image": body_json["image"],
@@ -157,20 +223,13 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
         limit=settings.LIMIT,
     )
     for result in results:
-        template = cv2.imread(os.path.abspath(result["image"]), 0)
+        conf =  images_to_compare(
+            os.path.abspath(main_image_path),
+            os.path.abspath(result["image"]),
+            imagehash.average_hash
+        )
 
-        main_image = cv2.imread(os.path.abspath(main_image_path))
-        gray_main_image = cv2.cvtColor(main_image, cv2.COLOR_BGR2GRAY)
-
-        try:
-            res = cv2.matchTemplate(
-                gray_main_image, template, cv2.TM_CCOEFF_NORMED
-            )
-        except Exception:
-            res = numpy.array([[0]])
-
-        conf = round(res.max() * 100, 2)
-        if conf > 90:
+        if conf < 10:
             return {
                 "result": "duplicated",
                 "image": body_json["image"],

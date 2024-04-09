@@ -13,6 +13,7 @@ from functools import wraps
 
 import rabbitpy
 import requests
+import imagehash
 from PIL import Image
 from fastapi import HTTPException, Depends, status
 from fastapi.security import APIKeyHeader
@@ -22,6 +23,11 @@ from src.settings import settings
 from src.models.check import CheckPublic
 from src.models.image_display import Checks, ImageUpdate, State, Images
 
+def images_to_compare(imfile1, imfile2, hashfunc = imagehash.phash):
+    img1, img2 = Image.open(imfile1), Image.open(imfile2)
+    hash1 = hashfunc(img1)
+    hash2 = hashfunc(img2)
+    return hash1 - hash2
 
 def timed_execution(func):
     @wraps(func)
