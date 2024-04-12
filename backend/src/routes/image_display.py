@@ -51,7 +51,7 @@ async def execute_query(latitude, longitude, program_id, limit):
             image
         FROM
             distance
-        WHERE distance <= {limit} and distance > 0
+        WHERE distance <= {limit} and distance >= 0
         ORDER BY
             distance
         LIMIT 70;
@@ -103,21 +103,7 @@ async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
         program_id=body_json["program_id"].split("_")[0],
         limit=settings.LIMIT,
     )
-    # main_image = cv2.imread(os.path.abspath(main_image_path))
-    # gray_main_image = cv2.cvtColor(main_image, cv2.COLOR_BGR2GRAY)
     for result in results:
-        # template = cv2.imread(os.path.abspath(result["image"]), 0)
-
-        # try:
-        #     res = cv2.matchTemplate(
-        #         gray_main_image, template, cv2.TM_CCOEFF_NORMED
-        #     )
-        # except Exception:
-        #     res = numpy.array([[0]])
-
-        # conf = round(res.max() * 100, 2)
-        # conf = images_to_compare(gray_main_image, template, cv2.matchTemplate)
-        # conf = images_to_compare(gray_main_image, template, imagehash.phash)
         conf_a = images_to_compare_2(
             os.path.abspath(main_image_path),
             os.path.abspath(result["image"]),
@@ -160,7 +146,7 @@ async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
         # print("conf_wd", conf_wd)
         # print("conf_co", conf_co)
         # print("conf_cr", conf_cr)
-        if conf_a < 10:
+        if conf_a < 15:
             return {
                 "result": "duplicated",
                 "image": body_json["image"],
@@ -229,7 +215,7 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
             imagehash.average_hash
         )
 
-        if conf < 10:
+        if conf < 15:
             return {
                 "result": "duplicated",
                 "image": body_json["image"],

@@ -163,70 +163,47 @@ async def detect_objects(image_id, body) -> dict:
 
     detection_dict, image_url = json.loads(message.body)
 
-    # Code new #
+    # code new
     check = await Checks.get(id=program_id)
-    check_dict = CheckPublic.from_orm(check).dict(exclude={"id", "name"})
-
+    check_dict = CheckPublic.from_orm(check).dict(exclude={"id", "name", "transform"})
+    
     matrix_check = check_dict["matrix"]
     image_result = "src/images/{}".format(image_url.split("/")[-1])
+    
+    result = State.PASS
+    sum_check = 0
+    sum_matrix = check_dict["count_face"] * number
+    reason = ""
+    
+    for key, item in matrix_check.items():
+      check_list = matrix_check[key].split("*")
+      check_transform = int(check_list[0][1:])
+      check_quant = int(check_list[1])
+      if "&" in check_list:
+        try:
+          if check_quant * number > detection_dict[key]:
+            result = State.FAIL
+            reason += f"{key} thiếu {check_quant * number - detection_dict[key]}"
+        except KeyError:
+          result = State.FAIL
+          reason += f"{key} thiếu {check_quant * number}"
+      sum_check += detection_dict[key] * check_transform;
+       
+    if result == State.PASS and sum_check < sum_matrix:
+        result = State.FAIL
+        reason = f"Bộ trưng bày {body['program_id']} thiếu {sum_matrix - sum_check} mặt"
 
-    if check_dict["transform"]:
-        sum_check = 0
-        sum_matrix = check_dict["count_face"] * number
-        for key, item in matrix_check.items():
-            try:
-                sum_check += (
-                    int(matrix_check[key].split("*")[0][1:3])
-                    * detection_dict[key]
-                )
-            except KeyError:
-                pass
-        if sum_matrix > sum_check:
-            image_update = ImageUpdate(
-                image_result=image_result, pass_fail=State.FAIL
-            )
-            await Images.get(id=image_id).update(**image_update.dict())
-            return {
-                "result": State.FAIL,
-                "reason": "Không đủ",
-                "program_id": body["program_id"],
-                "image_url": image_url.split("/")[-1],
-            }
-    else:
-        for key, item in matrix_check.items():
-            try:
-                if (
-                    int(matrix_check[key].split("*")[-1]) * number
-                ) > detection_dict[key]:
-                    image_update = ImageUpdate(
-                        image_result=image_result, pass_fail=State.FAIL
-                    )
-                    await Images.get(id=image_id).update(**image_update.dict())
-                    return {
-                        "result": State.FAIL,
-                        "reason": "Không đủ",
-                        "program_id": body["program_id"],
-                        "image_url": image_url.split("/")[-1],
-                    }
-            except KeyError:
-                image_update = ImageUpdate(
-                    image_result=image_result, pass_fail=State.FAIL
-                )
-                await Images.get(id=image_id).update(**image_update.dict())
-                return {
-                    "result": State.FAIL,
-                    "reason": f"Không có {key}",
-                    "program_id": body["program_id"],
-                    "image_url": image_url.split("/")[-1],
-                }
-    image_update = ImageUpdate(image_result=image_result, pass_fail=State.PASS)
+    image_update = ImageUpdate(image_result=image_result, pass_fail=result)
     await Images.get(id=image_id).update(**image_update.dict())
+
+       
     return {
-        "result": State.PASS,
-        "reason": "",
+        "result": result,
+        "reason": reason,
         "program_id": body["program_id"],
         "image_url": image_url.split("/")[-1],
     }
+
 
 
 # @timed_execution
