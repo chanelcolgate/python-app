@@ -1,6 +1,4 @@
-import hashlib
 import imghdr
-import os
 import platform
 import base64
 import time
@@ -9,6 +7,7 @@ from io import BytesIO
 from functools import wraps
 
 import requests
+import hashlib
 from PIL import Image
 
 

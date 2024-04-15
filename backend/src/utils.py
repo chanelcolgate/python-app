@@ -2,13 +2,10 @@ import os
 import time
 import json
 import hashlib
-import imghdr
-import platform
 import base64
 import asyncio
 import uuid
 from io import BytesIO
-from typing import Optional
 from functools import wraps
 
 import rabbitpy
@@ -23,11 +20,13 @@ from src.settings import settings
 from src.models.check import CheckPublic
 from src.models.image_display import Checks, ImageUpdate, State, Images
 
-def images_to_compare(imfile1, imfile2, hashfunc = imagehash.phash):
+
+def images_to_compare(imfile1, imfile2, hashfunc=imagehash.phash):
     img1, img2 = Image.open(imfile1), Image.open(imfile2)
     hash1 = hashfunc(img1)
     hash2 = hashfunc(img2)
     return hash1 - hash2
+
 
 def timed_execution(func):
     @wraps(func)
@@ -165,30 +164,35 @@ async def detect_objects(image_id, body) -> dict:
 
     # code new
     check = await Checks.get(id=program_id)
-    check_dict = CheckPublic.from_orm(check).dict(exclude={"id", "name", "transform"})
-    
+    check_dict = CheckPublic.from_orm(check).dict(
+        exclude={"id", "name", "transform"}
+    )
+
     matrix_check = check_dict["matrix"]
     image_result = "src/images/{}".format(image_url.split("/")[-1])
-    
+
     result = State.PASS
     sum_check = 0
     sum_matrix = check_dict["count_face"] * number
     reason = ""
-    
+
     for key, item in matrix_check.items():
-      check_list = matrix_check[key].split("*")
-      check_transform = int(check_list[0][1:])
-      check_quant = int(check_list[1])
-      if "&" in check_list:
+        check_list = matrix_check[key].split("*")
+        check_transform = int(check_list[0][1:])
+        check_quant = int(check_list[1])
+        if "&" in check_list:
+            try:
+                if check_quant * number > detection_dict[key]:
+                    result = State.FAIL
+                    reason += f"{key} thiếu {check_quant * number - detection_dict[key]}"
+            except KeyError:
+                result = State.FAIL
+                reason += f"{key} thiếu {check_quant * number}"
         try:
-          if check_quant * number > detection_dict[key]:
-            result = State.FAIL
-            reason += f"{key} thiếu {check_quant * number - detection_dict[key]}"
+            sum_check += detection_dict[key] * check_transform
         except KeyError:
-          result = State.FAIL
-          reason += f"{key} thiếu {check_quant * number}"
-      sum_check += detection_dict[key] * check_transform;
-       
+            pass
+
     if result == State.PASS and sum_check < sum_matrix:
         result = State.FAIL
         reason = f"Bộ trưng bày {body['program_id']} thiếu {sum_matrix - sum_check} mặt"
@@ -196,14 +200,12 @@ async def detect_objects(image_id, body) -> dict:
     image_update = ImageUpdate(image_result=image_result, pass_fail=result)
     await Images.get(id=image_id).update(**image_update.dict())
 
-       
     return {
         "result": result,
         "reason": reason,
         "program_id": body["program_id"],
         "image_url": image_url.split("/")[-1],
     }
-
 
 
 # @timed_execution
