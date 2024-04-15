@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from datetime import datetime, timezone, timedelta
 from typing import List, Any, Union, Dict, Optional
 
 import cv2
@@ -27,7 +28,12 @@ from src.models.image_display import (
 )
 from src.models.check import CheckPublic
 from src.settings import settings
-from src.utils import api_token, timed_execution, timed_execution_async, images_to_compare
+from src.utils import (
+    api_token,
+    timed_execution,
+    timed_execution_async,
+    images_to_compare,
+)
 from src.rabbitmq.connection import connection, channel, exchange
 from src.utils import detect_objects, read_and_write_url, read_and_write_base64
 
@@ -61,6 +67,7 @@ async def execute_query(latitude, longitude, program_id, limit):
         result = await tconn.execute_query_dict(sql_query)
 
     return result
+
 
 # def images_to_compare(img1, img2, func):
 #     if func == imagehash.phash:
@@ -107,7 +114,7 @@ async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
         conf_a = images_to_compare_2(
             os.path.abspath(main_image_path),
             os.path.abspath(result["image"]),
-            imagehash.average_hash
+            imagehash.average_hash,
         )
         # conf_p = images_to_compare_2(
         #     os.path.abspath(main_image_path),
@@ -209,10 +216,10 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
         limit=settings.LIMIT,
     )
     for result in results:
-        conf =  images_to_compare(
+        conf = images_to_compare(
             os.path.abspath(main_image_path),
             os.path.abspath(result["image"]),
-            imagehash.average_hash
+            imagehash.average_hash,
         )
 
         if conf < 15:
@@ -235,6 +242,7 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
         latitude=body_json["location"]["latitude"],
         longitude=body_json["location"]["longitude"],
         program=checks,
+        created_time=datetime.now(timezone.utc) + timedelta(hours=7),
     )
     result = await detect_objects(image_obj.id, body_json)
     return result
@@ -343,4 +351,6 @@ async def delete_images(program_id: str) -> dict:
             detail=f"Chương trình {program_id} không tồn tại",
             result="fail",
         )
-    return {"message": f"Các bức ảnh được chấm điểm với mã chương trình {program_id} đã bị xóa"}
+    return {
+        "message": f"Các bức ảnh được chấm điểm với mã chương trình {program_id} đã bị xóa"
+    }

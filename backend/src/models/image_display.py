@@ -1,5 +1,6 @@
 from typing import Optional, Union
 from enum import Enum
+from datetime import datetime
 
 from pydantic import BaseModel, validator
 from tortoise import fields, models
@@ -28,6 +29,12 @@ class Images(models.Model):
     )
     image_result = fields.CharField(max_length=128, null=True)
     pass_fail = fields.CharEnumField(enum_type=State, default="fail")
+
+    created_time = fields.DatetimeField(
+        auto_now=False, auto_no_add=False, null=True
+    )
+    number = fields.IntField(null=True)
+    ai_result = fields.JSONField(null=True)
 
     class Meta:
         table = "images"
@@ -72,9 +79,9 @@ class ImageBase(BaseModel):
         from_attributes = True
         json_schema_extra = {
             "example": {
-                "image": "http://10.20.1.90/image/002df0a7-25c2-47d0-b3e8-e513c3c0d9de.jpeg",
+                "image": "http://103.28.32.80:15433/image/3d48c4ea74ddec5c3804c64874df268c2a2a575e.jpg",
                 "location": {"latitude": 16.0590299, "longitude": 108.2075305},
-                "program_id": "HPLO_01",
+                "program_id": "LOCG_01",
             }
         }
 
@@ -88,6 +95,10 @@ class ImagePublic(ImageBase):
     image_result: str
     pass_fail: State
 
+    created_time: datetime
+    number: int
+    ai_result: dict
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -95,7 +106,10 @@ class ImagePublic(ImageBase):
                 "pass_fail": "pass",
                 "image": "src/tmp/5b77964d8e3024a252657ca4a75cb3ebbaeac074.jpg",
                 "location": {"latitude": 16.0590299, "longitude": 108.2075305},
-                "program_id": "HPLO_01",
+                "program_id": "LOCG_01",
+                "created_time": "2024-04-15 10:22:04.93517+00",
+                "number": 1,
+                "ai_result": '{"HOP_YTV": 3, "LOC_JUN": 2, "LOC_YTV": 1, "LOO_KID": 19, "LOO_YTV": 39}',
                 "id": 10,
             }
         }
@@ -104,6 +118,8 @@ class ImagePublic(ImageBase):
 class ImageUpdate(BaseModel):
     image_result: Optional[str] = None
     pass_fail: Optional[State] = None
+    number: Optional[int] = None
+    ai_result: Optional[dict] = None
 
 
 class ImageDisplayPublic(BaseModel):

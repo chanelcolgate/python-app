@@ -197,7 +197,12 @@ async def detect_objects(image_id, body) -> dict:
         result = State.FAIL
         reason = f"Bộ trưng bày {body['program_id']} thiếu {sum_matrix - sum_check} mặt"
 
-    image_update = ImageUpdate(image_result=image_result, pass_fail=result)
+    image_update = ImageUpdate(
+        image_result=image_result,
+        pass_fail=result,
+        number=number,
+        ai_result=detection_dict,
+    )
     await Images.get(id=image_id).update(**image_update.dict())
 
     return {
