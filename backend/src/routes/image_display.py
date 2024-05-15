@@ -225,7 +225,7 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
         if conf < 15:
             return {
                 "result": "duplicated",
-                "image": body_json["image"],
+                "image_url": body_json["image"],
                 "program_id": body_json["program_id"],
             }
 
