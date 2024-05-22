@@ -12,3 +12,4 @@ yolov8n.pt
 roboflow
 *.mp4
 *.avi
+.vscode

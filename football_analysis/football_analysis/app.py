@@ -2,6 +2,7 @@ import cv2
 
 from football_analysis.utils.video_utils import read_video, save_video
 from football_analysis.trackers.tracker import Tracker
+from football_analysis.team_assigner.team_assigner import TeamAssigner
 
 
 def main():
@@ -18,21 +19,34 @@ def main():
     )
 
     # save cropped image of a player
-    for track_id, player in tracks["players"][0].items():
-        bbox = player["bbox"]
-        frame = video_frames[0]
+    # for track_id, player in tracks["players"][0].items():
+    #     bbox = player["bbox"]
+    #     frame = video_frames[0]
 
-        # crop bbox from frame
-        cropped_image = frame[
-            int(bbox[1]) : int(bbox[3]), int(bbox[0]) : int(bbox[2])
-        ]
+    #     # crop bbox from frame
+    #     cropped_image = frame[
+    #         int(bbox[1]) : int(bbox[3]), int(bbox[0]) : int(bbox[2])
+    #     ]
 
-        # save the cropped image
-        cv2.imwrite(
-            f"football_analysis/output_videos/cropped_img.jpg", cropped_image
-        )
-        break
+    #     # save the cropped image
+    #     cv2.imwrite(
+    #         f"football_analysis/output_videos/cropped_img.jpg", cropped_image
+    #     )
+    #     break
 
+    # Assigner Player Teams
+    team_assigner = TeamAssigner()
+    team_assigner.assign_team_color(video_frames[0], tracks["players"][0])
+
+    for frame_num, player_track in enumerate(tracks["players"]):
+        for player_id, track in player_track.items():
+            team = team_assigner.get_player_team(
+                video_frames[frame_num], track["bbox"], player_id
+            )
+            tracks["players"][frame_num][player_id]["team"] = team
+            tracks["players"][frame_num][player_id]["team_color"] = (
+                team_assigner.team_colors[team]
+            )
     # Draw
     ## Draw object Tracks
     output_video_frames = tracker.draw_annotations(video_frames, tracks)
