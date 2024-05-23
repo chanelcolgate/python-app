@@ -1,3 +1,5 @@
+import glob
+
 import cv2
 
 from football_analysis.utils.video_utils import read_video, save_video
@@ -6,6 +8,17 @@ from football_analysis.team_assigner.team_assigner import TeamAssigner
 
 
 def main():
+    # Read Video
+    frames = []
+    for image_path in glob.glob("football_analysis/input_videos/video3/*.jpg"):
+        frame = cv2.imread(image_path)
+        frames.append(frame)
+
+    # Save Video
+    save_video(frames, "football_analysis/output_videos/video3.avi")
+
+
+def main_1():
     # Read Video
     video_frames = read_video("football_analysis/input_videos/08fd33_4.mp4")
 
