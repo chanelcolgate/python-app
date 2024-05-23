@@ -215,7 +215,7 @@ async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
 
 
 def write_notification(body, result):
-    p1 = body["request_id"]
+    p1 = body.get("request_id", "")
     p2 = body["image"]
     p3 = body["location"]["latitude"]
     p4 = body["location"]["longitude"]
@@ -311,7 +311,7 @@ async def showroom_grading_dms_service(
         longitude=body_json["location"]["longitude"],
         program=checks,
         created_time=datetime.now(timezone.utc) + timedelta(hours=7),
-        request_id=body_json["request_id"],
+        request_id=body_json.get("request_id", ""),
     )
     result = await detect_objects(image_obj.id, body_json)
     bg_tasks.add_task(write_notification, body_json, result)
@@ -374,7 +374,7 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
         longitude=body_json["location"]["longitude"],
         program=checks,
         created_time=datetime.now(timezone.utc) + timedelta(hours=7),
-        request_id=body_json["request_id"],
+        request_id=body_json.get("request_id", ""),
     )
     result = await detect_objects(image_obj.id, body_json)
     return result
