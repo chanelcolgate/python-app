@@ -10,7 +10,15 @@ import requests
 import rabbitpy
 import imagehash
 from PIL import Image
-from fastapi import APIRouter, HTTPException, status, Query, Body, Depends
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    status,
+    Query,
+    Body,
+    Depends,
+    BackgroundTasks,
+)
 from tortoise.exceptions import DoesNotExist
 from tortoise.contrib.fastapi import HTTPNotFoundError
 from tortoise.query_utils import Prefetch
@@ -26,7 +34,6 @@ from src.models.image_display import (
     Checks,
     Location,
 )
-from src.models.check import CheckPublic
 from src.settings import settings
 from src.utils import (
     api_token,
@@ -34,7 +41,6 @@ from src.utils import (
     timed_execution_async,
     images_to_compare,
 )
-from src.rabbitmq.connection import connection, channel, exchange
 from src.utils import detect_objects, read_and_write_url, read_and_write_base64
 
 image_display_router = APIRouter(tags=["Image Display"])
@@ -47,6 +53,7 @@ async def execute_query(latitude, longitude, program_id, limit):
         WITH distance AS (
             SELECT
                 id,
+                request_id,
                 image,
                 (((acos(sin(({latitude} * pi() / 180)) * sin(((latitude)::real * pi() / 180)) + cos(({latitude}* pi() / 180)) * cos(((latitude)::real * pi() / 180)) * cos((({longitude} - (longitude)::real) * pi() / 180)))) * 180 / pi()) * 60 * 1.1515 * 1.609344) * 1000 AS distance
             FROM
@@ -54,13 +61,28 @@ async def execute_query(latitude, longitude, program_id, limit):
             WHERE program_id = '{program_id}' and pass_fail = 'pass'
         )
         SELECT
-            image
+            image, request_id
         FROM
             distance
         WHERE distance <= {limit} and distance >= 0
         ORDER BY
             distance
         LIMIT 70;
+    """
+
+    async with in_transaction("default") as tconn:
+        result = await tconn.execute_query_dict(sql_query)
+
+    return result
+
+
+async def execute_query_2(latitude, longitude, program_id, limit):
+    sql_query = f"""
+        SELECT
+            image
+        FROM
+            images
+        WHERE program_id = '{program_id}' and pass_fail = 'pass'
     """
 
     async with in_transaction("default") as tconn:
@@ -104,7 +126,7 @@ async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
     else:
         main_image_path = read_and_write_base64(body_json["image"])
 
-    results = await execute_query(
+    results = await execute_query_2(
         latitude=body_json["location"]["latitude"],
         longitude=body_json["location"]["longitude"],
         program_id=body_json["program_id"].split("_")[0],
@@ -153,15 +175,15 @@ async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
         # print("conf_wd", conf_wd)
         # print("conf_co", conf_co)
         # print("conf_cr", conf_cr)
-        if conf_a < 15:
+        if conf_a < 10:
             return {
                 "result": "duplicated",
-                "image": body_json["image"],
+                "image_url": result["image"],
                 "program_id": body_json["program_id"],
             }
     return {
         "result": "no duplicated",
-        "image": body_json["image"],
+        "image_url": result["image"],
         "program_id": body_json["program_id"],
     }
 
@@ -191,7 +213,109 @@ async def create_duplicate_image(body: ImageCreate = Body(...)) -> dict:
 #     result = await detect_objects(body_json)
 #     return result
 
-from starlette.responses import JSONResponse, Response
+
+def write_notification(body, result):
+    p1 = body["request_id"]
+    p2 = body["image"]
+    p3 = body["location"]["latitude"]
+    p4 = body["location"]["longitude"]
+    p5 = body["program_id"]
+    p6 = result["result"]
+    if result["result"] == "duplicated":
+        p7 = result["image_url"]
+    else:
+        p7 = result["reason"]
+
+    form_data = {
+        "MESSAGE": "DMS.pkg_sync_display.ai_dms_request_log",
+        "PARAMS": [
+            {
+                "p1": p1,
+                "p2": p2,
+                "p3": p3,
+                "p4": p4,
+                "p5": p5,
+                "p6": p6,
+                "p7": p7,
+            }
+        ],
+    }
+    url = "http://dms1.yensaothienviet.vn:8580/webresources/ios"
+    req = requests.post(
+        url,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        data=json.dumps(form_data),
+    )
+    if req.status_code == 500:
+        return req.status_code, {}
+    return req.status_code, req.json()
+
+
+@image_display_router.post(
+    "/showroom-grading-dms-service", dependencies=[Depends(api_token)]
+)
+async def showroom_grading_dms_service(
+    bg_tasks: BackgroundTasks, body: ImageCreate = Body(...)
+) -> dict:
+    body_json = body.dict(exclude_unset=True)
+    if body_json["image"].startswith(("https://", "http://")):
+        main_image_path = read_and_write_url(body_json["image"])
+    # ftp://mind@10.17.4.14/_G0600060_1705549132152.jpg
+    elif body_json["image"].startswith("ftp://"):
+        image_ftp_name = body_json["image"].split("/")[-1]
+        image_ftp = f"{settings.FTP_URL}/{image_ftp_name}"
+        main_image_path = read_and_write_url(image_ftp)
+    else:
+        main_image_path = read_and_write_base64(body_json["image"])
+
+    results = await execute_query(
+        latitude=body_json["location"]["latitude"],
+        longitude=body_json["location"]["longitude"],
+        program_id=body_json["program_id"].split("_")[0],
+        limit=settings.LIMIT,
+    )
+    for result in results:
+        conf_a = images_to_compare(
+            os.path.abspath(main_image_path),
+            os.path.abspath(result["image"]),
+            imagehash.average_hash,
+        )
+        conf_p = images_to_compare(
+            os.path.abspath(main_image_path),
+            os.path.abspath(result["image"]),
+            imagehash.phash,
+        )
+
+        if conf_a < 15 and conf_p < 19:
+            tra_ve = {
+                "result": "duplicated",
+                "image_url": result["image"],
+                "program_id": body_json["program_id"],
+                "request_id": body_json.get("request_id", ""),
+                "duplicate_request": result["request_id"],
+            }
+            bg_tasks.add_task(write_notification, body_json, tra_ve)
+            return tra_ve
+
+    try:
+        checks = await Checks.get(id=body_json["program_id"].split("_")[0])
+    except DoesNotExist:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Chương trình {body_json['program_id']} không tồn tại",
+            result="fail",
+        )
+    image_obj = await Images.create(
+        image=main_image_path,
+        latitude=body_json["location"]["latitude"],
+        longitude=body_json["location"]["longitude"],
+        program=checks,
+        created_time=datetime.now(timezone.utc) + timedelta(hours=7),
+        request_id=body_json["request_id"],
+    )
+    result = await detect_objects(image_obj.id, body_json)
+    bg_tasks.add_task(write_notification, body_json, result)
+    return result
 
 
 @image_display_router.post(
@@ -216,17 +340,24 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
         limit=settings.LIMIT,
     )
     for result in results:
-        conf = images_to_compare(
+        conf_a = images_to_compare(
             os.path.abspath(main_image_path),
             os.path.abspath(result["image"]),
             imagehash.average_hash,
         )
+        conf_p = images_to_compare(
+            os.path.abspath(main_image_path),
+            os.path.abspath(result["image"]),
+            imagehash.phash,
+        )
 
-        if conf < 15:
+        if conf_a < 15 and conf_p < 19:
             return {
                 "result": "duplicated",
-                "image_url": body_json["image"],
+                "image_url": result["image"],
                 "program_id": body_json["program_id"],
+                "request_id": body_json.get("request_id", ""),
+                "duplicate_request": result["request_id"],
             }
 
     try:
@@ -243,6 +374,7 @@ async def showroom_grading(body: ImageCreate = Body(...)) -> dict:
         longitude=body_json["location"]["longitude"],
         program=checks,
         created_time=datetime.now(timezone.utc) + timedelta(hours=7),
+        request_id=body_json["request_id"],
     )
     result = await detect_objects(image_obj.id, body_json)
     return result

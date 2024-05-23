@@ -20,6 +20,7 @@ class Images(models.Model):
     """
 
     id = fields.IntField(pk=True)
+    request_id = fields.CharField(max_length=128, null=False)
     # image = fields.CharField(max_length=128, unique=True)
     image = fields.CharField(max_length=128)
     latitude = fields.FloatField()
@@ -74,6 +75,7 @@ class ImageBase(BaseModel):
     image: str
     location: Location
     program_id: str
+    request_id: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -82,6 +84,7 @@ class ImageBase(BaseModel):
                 "image": "http://103.28.32.80:15433/image/3d48c4ea74ddec5c3804c64874df268c2a2a575e.jpg",
                 "location": {"latitude": 16.0590299, "longitude": 108.2075305},
                 "program_id": "LOCG_01",
+                "request_id": "akdfhaldhfladfj",
             }
         }
 
@@ -92,6 +95,7 @@ class ImageCreate(ImageBase):
 
 class ImagePublic(ImageBase):
     id: int
+    request_id: str
     image_result: str
     pass_fail: State
 
@@ -111,6 +115,7 @@ class ImagePublic(ImageBase):
                 "number": 1,
                 "ai_result": '{"HOP_YTV": 3, "LOC_JUN": 2, "LOC_YTV": 1, "LOO_KID": 19, "LOO_YTV": 39}',
                 "id": 10,
+                "request_id": "aldfjladjf",
             }
         }
 

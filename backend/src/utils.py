@@ -210,6 +210,8 @@ async def detect_objects(image_id, body) -> dict:
         "reason": reason,
         "program_id": body["program_id"],
         "image_url": image_url.split("/")[-1],
+        "request_id": body.get("request_id", ""),
+        "duplicate_request": "",
     }
 
 
