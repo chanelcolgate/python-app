@@ -23,7 +23,7 @@ services:
     environment:
       # - HF_MODEL_ID=linhcuem/checker_TB_yolov8_ver2
       # - HF_MODEL_ID=chanelcolgate/chamdiemgianhang-vsk
-      - HF_MODEL_ID=chanelcolgate/chamdiemgianhang-vsk-v2
+      - HF_MODEL_ID=chanelcolgate/chamdiemgianhang-vsk-v7
       - MODEL_CONF=0.5
       - MODEL_IOU=0.45
     volumes:

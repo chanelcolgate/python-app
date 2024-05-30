@@ -10,3 +10,6 @@ newsbotpostgres
 yolov8n.pt
 *.jpg
 roboflow
+*.mp4
+*.avi
+.vscode
