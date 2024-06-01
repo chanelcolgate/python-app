@@ -13,3 +13,5 @@ roboflow
 *.mp4
 *.avi
 .vscode
+*.pt
+*.pth
