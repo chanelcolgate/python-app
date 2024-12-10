@@ -1,0 +1,17 @@
+{
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "db",
+    "database.port": "5432",
+    "database.user": "odoo",
+    "database.password": "odoo",
+    "database.dbname": "tiktok",
+    "database.server.name": "postgres",
+    "database.history.kafka.bootstrap.servers": "kafka:9092",
+    "topic.prefix": "dbserver1",
+    "schema.include.list": "public",
+    "time.precision.mode": "connect",
+    "include.schema.changes": false,
+    "slot.name": "debezium_slot",
+    "publication.autocreate.mode": "filtered",
+    "plugin.name": "pgoutput"
+}

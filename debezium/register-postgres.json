@@ -1,0 +1,14 @@
+{
+    "name": "postgres",
+    "config": {
+        "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+        "tasks.max": "1",
+        "database.hostname": "db",
+        "database.port": "5432",
+        "database.user": "odoo",
+        "database.password": "odoo",
+        "database.dbname" : "tiktok",
+        "topic.prefix": "dbserver1",
+        "schema.include.list": "public"
+    }
+}
