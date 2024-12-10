@@ -32,11 +32,11 @@ services:
       - label_studio_network
 
   redis:
-    image: redis:alpine
+    image: redis
     volumes:
       - "./data/redis:/data"
-    expose:
-      - 6379
+    ports:
+      - "6379:6379"
     networks:
       - label_studio_network
 
@@ -188,6 +188,39 @@ services:
       - "80:80"
     depends_on:
       - main
+    networks:
+      - label_studio_network
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - label_studio_network
+  
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 172.27.9.10
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    networks:
+      - label_studio_network
+
+  debezium:
+    image: debezium/connect:3.0.0.Final
+    ports:
+      - 8083:8083
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+    healthcheck: {test: curl -f localhost:8083, interval: 1s, start_period: 120s}
+    depends_on:
+      - kafka
+      - db
     networks:
       - label_studio_network
 

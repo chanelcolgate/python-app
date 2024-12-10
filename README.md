@@ -74,3 +74,50 @@ Step 10:
 ```
 docker-compose up -d webserver
 ```
+
+### Debezium
+The pgoutput plugin is built into PostgreSQL and requires no additional installation.
+```
+docker run -d --name postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=postgres \
+  -p 5432:5432 \
+  postgres:15 \
+  -c wal_level=logical \
+  -c max_replication_slots=10 \
+  -c max_wal_senders=10 \
+  -c shared_preload_libraries='pgoutput'
+
+```
+In your Debezium connector configuration, specify the pgoutput plugin:
+```json
+{
+  "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+  "database.hostname": "postgres",
+  "database.port": 5432,
+  "database.user": "postgres",
+  "database.password": "postgres",
+  "database.dbname": "postgres",
+  "slot.name": "debezium_slot",
+  "publication.autocreate.mode": "filtered",
+  "plugin.name": "pgoutput"
+}
+
+```
+- Create
+```
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json"  http://localhost:8083/connectors -d @register-postgres.json
+```
+- Update
+```
+curl -i -X PUT -H "Accept:application/json" -H "Content-Type:application/json"  http://localhost:8083/connectors/postgres/config -d @register-postgres.json
+```
+- Restart
+```
+curl -X POST http://localhost:8083/connectors/{connector-name}/restart
+```
+- Delete
+```
+curl -i -X DELETE -H "Accept:application/json" -H "Content-Type:application/json"  http://localhost:8083/connectors/postgres22
+```
